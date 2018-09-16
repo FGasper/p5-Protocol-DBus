@@ -6,6 +6,8 @@ use warnings;
 use Protocol::DBus::Marshal ();
 use Protocol::DBus::Message::Header ();
 
+use constant _PROTOCOL_VERSION => 1;
+
 sub parse {
     my ($class, $buf) = @_;
 
@@ -37,18 +39,6 @@ sub parse {
 
 use constant _REQUIRED => ('type', 'serial', 'hfields');
 
-use constant _HFIELD_SIG => {
-    PATH => 'o',
-    INTERFACE => 's',
-    MEMBER => 's',
-    ERROR_NAME => 's',
-    REPLY_SERIAL => 'u',
-    DESTINATION => 's',
-    SENDER => 's',
-    SIGNATURE => 'g',
-    UNIX_FDS => 'u',
-};
-
 sub new {
     my ($class, %opts) = @_;
 
@@ -66,20 +56,37 @@ sub new {
 
     $opts{'flags'} = $flags;
 
+    my @hfields;
+
     if ($opts{'hfields'}) {
         for my $hf ( @{ $opts{'hfields'} } ) {
-            $hf->[0] = _HFIELD_SIG()->{$hf->[0]} || do {
-                die "Bad 'hfield' name: $hf->[0]";
-            };
+            my @field = (
+                Protocol::DBus::Message::Header::FIELD()->{$hf->[0]} || do {
+                    die "Bad “hfields” name: $hf->[0]";
+                },
+                [
+                    Protocol::DBus::Message::Header::FIELD_SIGNATURE()->{$hf->[0]},
+                    $hf->[1],
+                ],
+            );
 
             if ($hf->[0] == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
                 $opts{'_body_sig'} = $hf->[1];
             }
+
+            push @hfields, \@field;
         }
     }
 
-    if (length $opts{'body'} && !$opts{'_body_sig'}) {
-        die "'body' requires a SIGNATURE header!";
+    $opts{'hfields'} = \@hfields;
+
+    if (defined $opts{'body'} && length $opts{'body'}) {
+        if (!$opts{'_body_sig'}) {
+            die "“body” requires a SIGNATURE header!";
+        }
+    }
+    else {
+        $opts{'body'} = q<>;
     }
 
     my %self = map { "$_" => $opts{$_} } keys %opts;
@@ -87,10 +94,45 @@ sub new {
     return bless \%self, $class;
 }
 
+our $_use_be;
+
 sub to_string_le {
+    return _to_string(@_);
+}
+
+sub to_string_be {
+    local $_use_be = 1;
+    return _to_string(@_);
+}
+
+sub _to_string {
     my ($self) = @_;
 
     my $data = [
-        
+        ord('l'),
+        $self->{'_type'},
+        $self->{'_flags'},
+        _PROTOCOL_VERSION(),
+        length( $self->{'_body'} ),
+        $self->{'_serial'},
+        $self->{'_hfields'},
+    ];
+
+    my $hdr_buf = Protocol::DBus::Marshal->( $_is_be ? 'marshal_be' : 'marshal_le' )->(
+        Protocol::DBus::Message::Header::SIGNATURE(),
+        $data,
+    );
+
+    Protocol::DBus::Pack::align_str($hdr_buf, 8);
+
+    if ($self->{'_body_sig'}) {
+        $hdr_buf .= Protocol::DBus::Marshal->( $_is_be ? 'marshal_be' : 'marshal_le' )->(
+            $self->{'_body_sig'},
+            $self->{'_body'},
+        );
+    );
+
+    return \$hdr_buf;
+}
 
 1;

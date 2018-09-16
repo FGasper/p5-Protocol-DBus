@@ -40,4 +40,10 @@ sub align {
     }
 }
 
+sub align_str {
+    if (my $mod = length($_[0]) % $_[1]) {
+        $_[0] .= "\0" x ($_[1] - $mod);
+    }
+}
+
 1;

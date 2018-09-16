@@ -53,7 +53,7 @@ sub _marshal {
 
         # Structs are given as arrays.
         elsif (index($sct, '(') == 0) {
-            _align_str($$buf_sr, 8);
+            Protocol::DBus::Pack::align_str($$buf_sr, 8);
 
             my $struct_sig = substr($sig, 1, -1);
 
@@ -68,7 +68,7 @@ sub _marshal {
 
         # Anything else is a basic type.
         else {
-            _align_str($$buf_sr, Protocol::DBus::Pack::ALIGNMENT()->{$sct});
+            Protocol::DBus::Pack::align_str($$buf_sr, Protocol::DBus::Pack::ALIGNMENT()->{$sct});
 
             my $pack = Protocol::DBus::Pack::NUMERIC()->{$sct};
             $pack ||= Protocol::DBus::Pack::STRING()->{$sct} or do {
@@ -86,7 +86,7 @@ sub _marshal {
 sub _marshal_array {
     my ($sct, $data, $buf_sr) = @_;
 
-    _align_str($$buf_sr, 4);
+    Protocol::DBus::Pack::align_str($$buf_sr, 4);
 
     # We’ll fill this in with the length below.
     $$buf_sr .= "\0\0\0\0";
@@ -103,7 +103,7 @@ sub _marshal_array {
         my $value_sig = substr($sct, 3, -1);
 
         for my $key ( keys %{ $data } ) {
-            _align_str($$buf_sr, 8);
+            Protocol::DBus::Pack::align_str($$buf_sr, 8);
             _marshal($key_sig, $key,$buf_sr);
             _marshal( $value_sig, $data->{$key}, $buf_sr);
         }
@@ -128,16 +128,6 @@ sub _marshal_array {
     $array_len -= 4 if $compensate_align8;
 
     substr( $$buf_sr, $array_start - 4, 4, pack("L$_ENDIAN_PACK", $array_len) );
-}
-
-sub _align_str {
-#use Data::Dumper;
-#local $Data::Dumper::Useqq = 1;
-#print STDERR Dumper( align_str => @_ );
-    Protocol::DBus::Pack::align( my $pad = length($_[0]) % $_[1], $_[1] );
-    if (my $mod = length($_[0]) % $_[1]) {
-        $_[0] .= "\0" x ($_[1] - $mod);
-    }
 }
 
 #----------------------------------------------------------------------

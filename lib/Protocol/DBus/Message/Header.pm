@@ -11,7 +11,8 @@ use Protocol::DBus::Pack ();
 # This just gets us to the length of the headers array.
 use constant {
     _MIN_HEADER_LENGTH => 16,
-    _HEADER_SIGNATURE => 'yyyyuua(yv)',
+
+    SIGNATURE => 'yyyyuua(yv)',
 
     MESSAGE_TYPE => {
         METHOD_CALL => 1,
@@ -36,6 +37,18 @@ use constant {
         SENDER => 7,
         SIGNATURE => 8,
         UNIX_FDS => 9,
+    },
+
+    FIELD_SIGNATURE => {
+        PATH => 'o',
+        INTERFACE => 's',
+        MEMBER => 's',
+        ERROR_NAME => 's',
+        REPLY_SERIAL => 'u',
+        DESTINATION => 's',
+        SENDER => 's',
+        SIGNATURE => 'g',
+        UNIX_FDS => 'u',
     },
 };
 
@@ -63,7 +76,7 @@ sub parse_simple {
         if (length($buf) >= (_MIN_HEADER_LENGTH + $array_length)) {
             my ($content, $length) = Protocol::DBus::Marshal->can(
                 $_is_big_endian ? 'unmarshal_be' : 'unmarshal_le'
-            )->($buf, 0, _HEADER_SIGNATURE);
+            )->($buf, 0, SIGNATURE());
 
             Protocol::DBus::Pack::align( $length, 8 );
 
