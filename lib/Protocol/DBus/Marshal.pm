@@ -34,7 +34,6 @@ sub unmarshal_be {
 
 sub _marshal {
     my ($sig, $data, $buf_sr) = @_;
-print "_marshal sig: $sig\n";
 
     $buf_sr ||= \do { my $v = q<> };
 
@@ -69,11 +68,7 @@ print "_marshal sig: $sig\n";
 
         # Anything else is a basic type.
         else {
-use Data::Dumper;
-local $Data::Dumper::Useqq = 1;
-#print STDERR Dumper( before_align => $sct, Protocol::DBus::Pack::ALIGNMENT()->{$sct}, $buf_sr );
             _align_str($$buf_sr, Protocol::DBus::Pack::ALIGNMENT()->{$sct});
-#print STDERR Dumper( after_align => $sct, Protocol::DBus::Pack::ALIGNMENT()->{$sct}, $buf_sr );
 
             my $pack = Protocol::DBus::Pack::NUMERIC()->{$sct};
             $pack ||= Protocol::DBus::Pack::STRING()->{$sct} or do {
@@ -98,6 +93,10 @@ sub _marshal_array {
 
     my $array_start = length $$buf_sr;
 
+    # Per the spec, array lengths do NOT include alignment bytes
+    # after the length. This only affects 8-byte-aligned types.
+    my $compensate_align8;
+
     # DICT_ENTRY arrays are given as plain Perl hashes
     if (index($sct, '{') == 1) {
         my $key_sig = substr($sct, 2, 1);
@@ -114,12 +113,19 @@ sub _marshal_array {
     else {
         substr($sct, 0, 1, q<>);    # chop off the leading “a”
 
+        if ($array_start % 8) {
+            $compensate_align8 = (0 == index($sct, '('));
+            $compensate_align8 ||= (0 == index($sct, '{'));
+            $compensate_align8 ||= (Protocol::DBus::Pack::ALIGNMENT()->{$sct} || 0) == 8;
+        }
+
         for my $item ( @$data ) {
             _marshal($sct, $item, $buf_sr);
         }
     }
 
     my $array_len = length($$buf_sr) - $array_start;
+    $array_len -= 4 if $compensate_align8;
 
     substr( $$buf_sr, $array_start - 4, 4, pack("L$_ENDIAN_PACK", $array_len) );
 }
@@ -205,6 +211,9 @@ sub _unmarshal_sct {
             my @array_items;
             $obj = bless \@array_items, 'Protocol::DBus::Type::Array';
 
+            # If the array contents are 8-byte-aligned, then the array will
+            # actually be 4 bytes longer than this. But it doesn’t appear we
+            # need to care about that since _unmarshal_sct() accounts for that.
             my $array_end = $buf_offset + $array_len;
 
             while ($buf_offset < $array_end) {

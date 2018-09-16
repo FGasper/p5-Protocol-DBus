@@ -73,6 +73,11 @@ my @marshal_le_tests = (
     #----------------------------------------------------------------------
 
     {
+        in => [ 'at', [5] ],
+        out => "\x08\0\0\0" . "\0\0\0\0" . "\x05\0\0\0\0\0\0\0",
+    },
+
+    {
         in => [ v => [ o => '/org/freedesktop/NetworkManager' ] ],
         out => "\1o\0\0\37\0\0\0/org/freedesktop/NetworkManager\0",
     },
@@ -103,8 +108,8 @@ for my $t (@marshal_le_tests) {
     ) or diag _terse_dump( [ got => $out, wanted => $t->{'out'} ] );
 }
 
-done_testing();
-exit;
+#done_testing();
+#exit;
 #----------------------------------------------------------------------
 
 my @too_short = (
@@ -139,6 +144,28 @@ my @positive_le_tests = (
                     Isa('Protocol::DBus::Type::Struct'),
                 ) ] ),
                 Isa('Protocol::DBus::Type::Struct'),
+            ) ],
+            12,
+        ],
+    },
+
+    {
+        in => [ "\x08\0\0\0" . "\0\0\0\0" . "\x05\0\0\0\0\0\0\0", 0, 'at' ],
+        out => [
+            [ all(
+                noclass([ 5 ]),
+                Isa('Protocol::DBus::Type::Array'),
+            ) ],
+            16,
+        ],
+    },
+
+    {
+        in => [ "\0\0\0\0" . "\x08\0\0\0" . "\x05\0\0\0\0\0\0\0", 4, 'at' ],
+        out => [
+            [ all(
+                noclass([ 5 ]),
+                Isa('Protocol::DBus::Type::Array'),
             ) ],
             12,
         ],
