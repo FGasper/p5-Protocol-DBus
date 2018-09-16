@@ -13,6 +13,100 @@ use_ok('Protocol::DBus::Marshal');
 
 #----------------------------------------------------------------------
 
+my $can_64 = eval { !!pack 'q' };
+
+my @marshal_le_tests = (
+    {
+        in => [ 'y', 0 ],
+        out => chr 0,
+    },
+    {
+        in => [ 'y', 123 ],
+        out => chr 123,
+    },
+    {
+        in => [ 'b', 0 ],
+        out => "\0\0\0\0",
+    },
+    {
+        in => [ 'b', 1 ],
+        out => "\1\0\0\0",
+    },
+    {
+        in => [ 'n', -8 ],
+        out => pack( 's<', -8 ),
+    },
+    {
+        in => [ 'q', 127 ],
+        out => pack( 'S<', 127 ),
+    },
+    {
+        in => [ 'i', -8 ],
+        out => pack( 'l<', -8 ),
+    },
+    {
+        in => [ 'u', 127 ],
+        out => pack( 'L<', 127 ),
+    },
+    {
+        in => [ 'd', 127.46 ],
+        out => pack( 'd<', 127.46 ),
+    },
+
+    #----------------------------------------------------------------------
+
+    {
+        in => [ 'g', 'ybn' ],
+        out => "\x03ybn\0",
+    },
+
+    {
+        in => [ 's', 'ybn' ],
+        out => "\x03\0\0\0ybn\0",
+    },
+
+    {
+        in => [ 'o', 'ybn' ],
+        out => "\x03\0\0\0ybn\0",
+    },
+
+    #----------------------------------------------------------------------
+
+    {
+        in => [ v => [ o => '/org/freedesktop/NetworkManager' ] ],
+        out => "\1o\0\0\37\0\0\0/org/freedesktop/NetworkManager\0",
+    },
+
+    {
+        in => [
+            'ua(yv)',
+            [
+                127,
+                [
+                    [ 1 => [ o => '/org/freedesktop/NetworkManager' ] ],
+                    [ 3 => [ s => 'Introspect' ] ],
+                    [ 2 => [ s => 'org.freedesktop.DBus.Introspectable' ] ],
+                    [ 6 => [ s => 'org.freedesktop.NetworkManager' ] ],
+                ],
+            ],
+        ],
+        out => "\x7f\0\0\0\227\0\0\0\1\1o\0\37\0\0\0/org/freedesktop/NetworkManager\0\3\1s\0\n\0\0\0Introspect\0\0\0\0\0\0\2\1s\0#\0\0\0org.freedesktop.DBus.Introspectable\0\0\0\0\0\6\1s\0\36\0\0\0org.freedesktop.NetworkManager\0",
+    },
+);
+
+for my $t (@marshal_le_tests) {
+    my $out = Protocol::DBus::Marshal::marshal_le( @{ $t->{'in'} } );
+    is(
+        $$out,
+        $t->{'out'},
+        'marshal_le(): ' . _terse_dump($t->{'in'}),
+    ) or diag _terse_dump( [ got => $out, wanted => $t->{'out'} ] );
+}
+
+done_testing();
+exit;
+#----------------------------------------------------------------------
+
 my @too_short = (
     [ "\x02\0\0\0hi\0" . "\0" . "\x04\0". "\x02", 0, '(s(qq))'],
 );
@@ -202,11 +296,17 @@ for my $t (@positive_le_tests) {
 sub _str_for_buf_offset_sig {
     my ($buf, $buf_offset, $sig) = @_;
 
+    return '[' . join(', ', _terse_dump($buf), $buf_offset, $sig) . ']';
+}
+
+sub _terse_dump {
+    my ($thing) = @_;
+
     local $Data::Dumper::Terse = 1;
     local $Data::Dumper::Indent = 0;
     local $Data::Dumper::Useqq = 1;
 
-    return '[' . join(', ', Dumper($buf), $buf_offset, $sig) . ']';
+    return Dumper($thing);
 }
 
 #----------------------------------------------------------------------

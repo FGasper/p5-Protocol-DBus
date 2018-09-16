@@ -5,6 +5,19 @@ use warnings;
 
 # Returns the length of the single complete type at $sct_offset.
 
+sub split {
+    my ($sig) = @_;
+
+    my @scts;
+
+    while (length($sig)) {
+        my $next_sct_len = Protocol::DBus::Signature::get_sct_length($sig, 0);
+        push @scts, substr( $sig, 0, $next_sct_len, q<> );
+    }
+
+    return @scts;
+}
+
 sub get_sct_length {
     my ($sig, $sct_offset) = @_;
 
