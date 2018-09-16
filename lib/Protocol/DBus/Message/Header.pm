@@ -12,25 +12,32 @@ use Protocol::DBus::Pack ();
 use constant {
     _MIN_HEADER_LENGTH => 16,
     _HEADER_SIGNATURE => 'yyyyuua(yv)',
-};
 
-use constant FLAG => {
-    NO_REPLY_EXPECTED => 1,
-    NO_AUTO_START => 2,
-    ALLOW_INTERACTIVE_AUTHORIZATION => 4,
-};
+    MESSAGE_TYPE => {
+        METHOD_CALL => 1,
+        METHOD_RETURN => 2,
+        ERROR => 3,
+        SIGNAL => 4,
+    },
 
-use FIELD => {
-    PATH => 1,
-    INTERFACE => 2,
-    MEMBER => 3,
-    ERROR_NAME => 4,
-    REPLY_SERIAL => 5,
-    DESTINATION => 6,
-    SENDER => 7,
-    SIGNATURE => 8,
-    UNIX_FDS => 9,
-};
+    FLAG => {
+        NO_REPLY_EXPECTED => 1,
+        NO_AUTO_START => 2,
+        ALLOW_INTERACTIVE_AUTHORIZATION => 4,
+    },
+
+    FIELD => {
+        PATH => 1,
+        INTERFACE => 2,
+        MEMBER => 3,
+        ERROR_NAME => 4,
+        REPLY_SERIAL => 5,
+        DESTINATION => 6,
+        SENDER => 7,
+        SIGNATURE => 8,
+        UNIX_FDS => 9,
+    },
+);
 
 my ($_is_big_endian, $prot_version);
 
@@ -39,17 +46,17 @@ sub parse_simple {
 
     Call::Context::must_be_list();
 
-    if (length($buf) >= _MIN_HEADER_LENGTH())
+    if (length($buf) >= _MIN_HEADER_LENGTH()) {
         ($_is_big_endian, $prot_version) = unpack 'axxa', $buf;
 
         if (1 != $prot_version) {
             die "Protocol version must be 1, not “$prot_version”!";
         }
 
-        $_is_big_endian = ($_endian eq 'b') ? 1 : ($_endian eq 'l') ? 0 : die "Invalid endian byte: “$_endian”!";
+        $_is_big_endian = ($_is_big_endian eq 'b') ? 1 : ($_is_big_endian eq 'l') ? 0 : die "Invalid endian byte: “$_is_big_endian”!";
 
         my $array_length = unpack(
-            '@12 ' . ($_is_big_endian ? 'N', 'V'),
+            '@12 ' . ($_is_big_endian ? 'N' : 'V'),
             $buf,
         );
 

@@ -20,7 +20,7 @@ sub new {
     my $module = __PACKAGE__ . "::Mechanism::$opts{'mechanism'}";
     Module::Load::load($module);
 
-    @opts{map { "_$_" } keys %opts} = delete @opts{ keys %opts };
+    $opts{"_$_"} = delete $opts{$_} for keys %opts;
 
     $opts{'_io'} = IO::Framed->new( $opts{'_socket'} )->enable_write_queue();
 
@@ -42,8 +42,8 @@ sub _create_xaction {
 
     # 0 = send; 1 = receive
     my @xaction = (
-        [ 0 => 'AUTH', $self->{'_mechanism'}, $opts{'_mechanism_module'}->INITIAL_RESPONSE() ],
-        $opts{'_mechanism_module'}->AFTER_AUTH(),
+        [ 0 => 'AUTH', $self->{'_mechanism'}, $self->{'_mechanism_module'}->INITIAL_RESPONSE() ],
+        $self->{'_mechanism_module'}->AFTER_AUTH(),
 
         [ 1 => 'OK', \&_consume_ok ],
     );
@@ -90,12 +90,14 @@ sub go {
     my ($self) = @_;
 
     my $s = $self->{'_socket'};
+use Data::Dumper;
+#print STDERR Dumper $self;
 
     $self->{'_xaction'} ||= $self->_create_xaction();
 
     $self->{'_sent_initial'} ||= do {
-        $opts{'_mechanism_module'}->send_initial($s);
-    }
+        $self->{'_mechanism_module'}->send_initial($s);
+    };
 
     if ($self->{'_sent_initial'}) {
       LINES:
@@ -145,47 +147,6 @@ sub _read_line {
     }
 
     return $line;
-}
-
-#----------------------------------------------------------------------
-
-package Protocol::DBus::Authn::Mechanism;
-
-use constant INITIAL_RESPONSE => ();
-use constant AFTER_AUTH => ();
-
-#----------------------------------------------------------------------
-
-package Protocol::DBus::Authn::Mechanism::EXTERNAL;
-
-use parent -norequire => 'Protocol::DBus::Authn::Mechanism';
-
-use Socket ();
-use Socket::MsgHdr ();
-
-sub send_initial {
-    my ($class, $s) = @_;
-
-    my $msg = Socket::MsgHdr->new( buf => "\0" );
-
-    my $ok;
-
-    if (Socket->can('SCM_CREDENTIALS')) {
-        my $ucred = pack( 'I*', $$, $>, (split m< >, $))[0]);
-
-        $msg->cmsghdr( Socket::SOL_SOCKET(), Socket::SCM_CREDENTIALS(), $ucred );
-
-        $ok = Socket::MsgHdr::sendmsg($s, $msg, Socket::MSG_NOSIGNAL() );
-
-        if (!$ok && $!{'EAGAIN'}) {
-            die "sendmsg($s): $!";
-        }
-    }
-    else {
-        die "Unsupported OS: $^O";
-    }
-
-    return $ok;
 }
 
 1;

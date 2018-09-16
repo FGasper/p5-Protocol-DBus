@@ -35,4 +35,22 @@ sub parse {
     return undef;
 }
 
+use constant _REQUIRED = ('type', 'serial', 'hfields');
+
+sub new {
+    my ($class, %opts) = @_;
+
+    my @missing = grep { !defined $opts{$_} } _REQUIRED();
+    die "missing: @missing" if @missing;
+
+    $opts{'type'} = Protocol::DBus::Message::Header::MESSAGE_TYPE()->{ $opts{'type'} } || die "Bad 'type': '$opts{'type'}'";
+
+    my $flags = 0;
+    if ($opts{'flags'}) {
+        for my $f (@{ $opts{'flags'} }) {
+            $flags |= Protocol::DBus::Message::Header::FLAG()->{$f} || die "Bad 'flag': $f";
+        }
+    }
+
+    $opts{'type'} =  $opts{'type'} } or die "Bad 'type': '$opts{'type'}'";
 1;
