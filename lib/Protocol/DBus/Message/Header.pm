@@ -37,7 +37,7 @@ use constant {
         SIGNATURE => 8,
         UNIX_FDS => 9,
     },
-);
+};
 
 my ($_is_big_endian, $prot_version);
 
@@ -75,5 +75,9 @@ sub parse_simple {
 
     return;
 }
+
+# Kind of ugly ..
+sub to_string_le {
+    my ($typenum, $flagsnum, $bodylen, $serial, $hfields_ar) = @_;
 
 1;

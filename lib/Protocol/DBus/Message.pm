@@ -35,7 +35,19 @@ sub parse {
     return undef;
 }
 
-use constant _REQUIRED = ('type', 'serial', 'hfields');
+use constant _REQUIRED => ('type', 'serial', 'hfields');
+
+use constant _HFIELD_SIG => {
+    PATH => 'o',
+    INTERFACE => 's',
+    MEMBER => 's',
+    ERROR_NAME => 's',
+    REPLY_SERIAL => 'u',
+    DESTINATION => 's',
+    SENDER => 's',
+    SIGNATURE => 'g',
+    UNIX_FDS => 'u',
+};
 
 sub new {
     my ($class, %opts) = @_;
@@ -52,5 +64,33 @@ sub new {
         }
     }
 
-    #$opts{'type'} =  $opts{'type'} } or die "Bad 'type': '$opts{'type'}'";
+    $opts{'flags'} = $flags;
+
+    if ($opts{'hfields'}) {
+        for my $hf ( @{ $opts{'hfields'} } ) {
+            $hf->[0] = _HFIELD_SIG()->{$hf->[0]} || do {
+                die "Bad 'hfield' name: $hf->[0]";
+            };
+
+            if ($hf->[0] == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
+                $opts{'_body_sig'} = $hf->[1];
+            }
+        }
+    }
+
+    if (length $opts{'body'} && !$opts{'_body_sig'}) {
+        die "'body' requires a SIGNATURE header!";
+    }
+
+    my %self = map { "$_" => $opts{$_} } keys %opts;
+
+    return bless \%self, $class;
+}
+
+sub to_string_le {
+    my ($self) = @_;
+
+    my $data = [
+        
+
 1;
