@@ -8,6 +8,8 @@ use parent 'Protocol::DBus::Authn::Mechanism';
 use Socket ();
 use Socket::MsgHdr ();
 
+sub INITIAL_RESPONSE { unpack 'H*', $> }
+
 sub send_initial {
     my ($class, $s) = @_;
 

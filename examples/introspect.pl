@@ -23,27 +23,31 @@ my $authn = Protocol::DBus::Authn->new(
     mechanism => 'EXTERNAL',
 );
 
-$authn->go();
+$authn->negotiate_unix_fd()->go();
 
 my $msg = Protocol::DBus::Message->new(
     type => 'METHOD_CALL',
     serial => 1,
     hfields => [
-        [ PATH => '/org/freedesktop/NetworkManager' ],
-        [ INTERFACE => '/org/freedesktop/NetworkManager' ],
-        [ DESTINATION => '/org/freedesktop/NetworkManager' ],
-        [ MEMBER => 'Introspect' ],
+#        [ PATH => '/org/freedesktop/NetworkManager' ],
+#        [ INTERFACE => '/org/freedesktop/NetworkManager' ],
+#        [ DESTINATION => '/org/freedesktop/NetworkManager' ],
+#        [ MEMBER => 'Introspect' ],
+        [ PATH => '/org/freedesktop/DBus' ],
+        [ INTERFACE => 'org.freedesktop.DBus' ],
+        [ DESTINATION => 'org.freedesktop.DBus' ],
+        [ MEMBER => 'Hello' ],
     ],
 );
 
-syswrite $s, $msg->to_string_le();
+syswrite $s, ${ $msg->to_string_le() };
 
 my $buf = q<>;
-my $msg;
+$msg = undef;
 while (sysread $s, $buf, 32768, length($buf)) {
     $msg = Protocol::DBus::Message->parse($buf);
     last if $msg;
 }
 
 use Data::Dumper;
-print STDERR Dumper $msg;
+print STDERR Dumper( final => $msg );

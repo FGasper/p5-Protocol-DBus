@@ -45,7 +45,7 @@ sub _create_xaction {
         [ 0 => 'AUTH', $self->{'_mechanism'}, $self->{'_mechanism_module'}->INITIAL_RESPONSE() ],
         $self->{'_mechanism_module'}->AFTER_AUTH(),
 
-        [ 1 => 'OK', \&_consume_ok ],
+        [ 1 => \&_consume_ok ],
     );
 
     if ( $self->{'_negotiate_unix_fd'} ) {
@@ -134,7 +134,7 @@ sub cancel {
 sub _send_line {
     my ($self) = @_;
 
-    my $ok = $self->{'_io'}->enqueue_write( $_[1] . _CRLF() );
+    my $ok = $self->{'_io'}->write( $_[1] . _CRLF() );
     return $self->{'_io'}->flush_write_queue();
 }
 
