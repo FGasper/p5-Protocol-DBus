@@ -4,12 +4,22 @@ use strict;
 use warnings;
 use autodie;
 
+use Socket;
+
+# bug in this module: it breaks when loaded dynamically
 use Socket::MsgHdr;
+
+use Data::Dumper;
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
 
 use Protocol::DBus::Authn;
 use Protocol::DBus::Message;
 
-use Socket;
+$| = 1;
+
+my $buf = q<>;
 
 my $dest = $ENV{'DBUS_SESSION_BUS_ADDRESS'} or die 'No DBUS_SESSION_BUS_ADDRESS!';
 
@@ -25,14 +35,12 @@ my $authn = Protocol::DBus::Authn->new(
 
 $authn->negotiate_unix_fd()->go();
 
+alarm 5;
+
 my $msg = Protocol::DBus::Message->new(
     type => 'METHOD_CALL',
     serial => 1,
     hfields => [
-#        [ PATH => '/org/freedesktop/NetworkManager' ],
-#        [ INTERFACE => '/org/freedesktop/NetworkManager' ],
-#        [ DESTINATION => '/org/freedesktop/NetworkManager' ],
-#        [ MEMBER => 'Introspect' ],
         [ PATH => '/org/freedesktop/DBus' ],
         [ INTERFACE => 'org.freedesktop.DBus' ],
         [ DESTINATION => 'org.freedesktop.DBus' ],
@@ -42,12 +50,41 @@ my $msg = Protocol::DBus::Message->new(
 
 syswrite $s, ${ $msg->to_string_le() };
 
-my $buf = q<>;
-$msg = undef;
-while (sysread $s, $buf, 32768, length($buf)) {
-    $msg = Protocol::DBus::Message->parse(\$buf);
-    last if $msg;
+while (1) {
+    $msg = _get_msg();
+    last if $msg->type_is('SIGNAL');
 }
 
-use Data::Dumper;
-print STDERR Dumper( final => $msg );
+$msg = Protocol::DBus::Message->new(
+    type => 'METHOD_CALL',
+    serial => 2,
+    hfields => [
+        [ PATH => '/org/freedesktop/DBus' ],
+        [ INTERFACE => 'org.freedesktop.DBus.Introspectable' ],
+        [ DESTINATION => 'org.freedesktop.DBus' ],
+        [ MEMBER => 'Introspect' ],
+    ],
+);
+
+syswrite $s, ${ $msg->to_string_le() };
+
+while (1) {
+    $msg = _get_msg();
+
+    if (!$msg->type_is('SIGNAL')) {
+        last if $msg->serial() == 3;
+    }
+}
+
+sub _get_msg {
+    my $msg;
+    while ($buf || sysread $s, $buf, 32768, length($buf)) {
+        $msg = Protocol::DBus::Message->parse(\$buf);
+        if ($msg) {
+            print Dumper $msg;
+            return $msg;
+        }
+    }
+
+    die "Empty read?";
+}
