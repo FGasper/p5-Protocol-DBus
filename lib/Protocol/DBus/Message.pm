@@ -115,8 +115,30 @@ sub type {
     return $_[0]->{'_type'};
 }
 
+sub type_is {
+    my ($self, $name) = @_;
+
+    return $_[0]->{'_type'} == Protocol::DBus::Message::Header::MESSAGE_TYPE()->{$name} || do {
+        die "Invalid type name: $name";
+    };
+}
+
 sub flags {
     return $_[0]->{'_flags'};
+}
+
+sub flags_have {
+    my ($self, @names) = @_;
+
+    die "Need flag names!" if !@names;
+
+    for my $name (@names) {
+        return 0 if !($_[0]->{'_flags'} & (Protocol::DBus::Message::Header::FLAG()->{$name} || do {
+        die "Invalid flag name: “$name”";
+        }));
+    }
+
+    return 1;
 }
 
 sub serial {
