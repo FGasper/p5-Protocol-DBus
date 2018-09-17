@@ -60,7 +60,7 @@ sub parse_simple {
     Call::Context::must_be_list();
 
     if (length($buf) >= _MIN_HEADER_LENGTH()) {
-        ($_is_big_endian, $prot_version) = unpack 'axxa', $buf;
+        ($_is_big_endian, $prot_version) = unpack 'axxC', $buf;
 
         if (1 != $prot_version) {
             die "Protocol version must be 1, not “$prot_version”!";
@@ -82,15 +82,9 @@ sub parse_simple {
 
             return( $content, $length, $_is_big_endian );
         }
-        #my $len = length($buf);
-        #die sprintf("Header buffer is only %d byte(s) long; must be at least %d!\n", $len, MIN_HEADER_LENGTH());
     }
 
     return;
 }
-
-# Kind of ugly ..
-sub to_string_le {
-    my ($typenum, $flagsnum, $bodylen, $serial, $hfields_ar) = @_;
 
 1;
