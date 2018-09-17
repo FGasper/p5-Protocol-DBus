@@ -89,8 +89,4 @@ sub parse_simple {
     return;
 }
 
-# Kind of ugly ..
-sub to_string_le {
-    my ($typenum, $flagsnum, $bodylen, $serial, $hfields_ar) = @_;
-
 1;
