@@ -118,9 +118,9 @@ sub type {
 sub type_is {
     my ($self, $name) = @_;
 
-    return $_[0]->{'_type'} == Protocol::DBus::Message::Header::MESSAGE_TYPE()->{$name} || do {
+    return $_[0]->{'_type'} == (Protocol::DBus::Message::Header::MESSAGE_TYPE()->{$name} || do {
         die "Invalid type name: $name";
-    };
+    });
 }
 
 sub flags {
