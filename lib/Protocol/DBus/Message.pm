@@ -9,11 +9,11 @@ use Protocol::DBus::Message::Header ();
 use constant _PROTOCOL_VERSION => 1;
 
 sub parse {
-    my ($class, $buf) = @_;
+    my ($class, $buf_sr) = @_;
 
-    if ( my ($hdr, $hdr_len, $is_be) = Protocol::DBus::Message::Header::parse_simple($buf) ) {
+    if ( my ($hdr, $hdr_len, $is_be) = Protocol::DBus::Message::Header::parse_simple($buf_sr) ) {
 
-        if (length($buf) >= ($hdr_len + $hdr->[4])) {
+        if (length($$buf_sr) >= ($hdr_len + $hdr->[4])) {
             my $body_sig;
 
             for my $hfield ( @{ $hdr->[6] } ) {
@@ -28,12 +28,16 @@ sub parse {
             }
 
             my $body_data;
+
             if ($body_sig) {
-                ($body_data) = Protocol::DBus::Marshal->can( 'unmarshal_' . ($is_be ? 'be' : 'le') )->($buf, $hdr_len, $body_sig);
+                ($body_data) = Protocol::DBus::Marshal->can( 'unmarshal_' . ($is_be ? 'be' : 'le') )->($buf_sr, $hdr_len, $body_sig);
             }
 
             my %self = ( _body_sig => $body_sig );
             @self{'_type', '_flags', 'body_length', '_serial', '_hfields', '_body'} = (@{$hdr}[1, 2, 4, 5, 6], $body_data);
+
+            # Remove the unmarshaled bytes.
+            substr( $$buf_sr, 0, $hdr_len + $hdr->[4], q<> );
 
             return bless \%self, $class;
         }
@@ -85,13 +89,11 @@ sub new {
 
     $opts{'hfields'} = bless \@hfields, 'Protocol::DBus::Type::Array';
 
-    if (defined $opts{'body'} && length $opts{'body'}) {
-        if (!$opts{'_body_sig'}) {
-            die "“body” requires a SIGNATURE header!";
-        }
+    if ($opts{'body'}) {
+        die "“body” requires a SIGNATURE header!" if !$opts{'_body_sig'};
     }
     else {
-        $opts{'body'} = q<>;
+        $opts{'body'} = \q<>;
     }
 
     my %self = map { ( "_$_" => $opts{$_} ) } keys %opts;
@@ -142,7 +144,7 @@ sub _to_string {
         $self->{'_type'},
         $self->{'_flags'},
         _PROTOCOL_VERSION(),
-        length( $self->{'_body'} ),
+        length( ${ $self->{'_body'} } ),
         $self->{'_serial'},
         $self->{'_hfields'},
     ];

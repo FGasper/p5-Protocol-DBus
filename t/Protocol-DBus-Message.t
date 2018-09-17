@@ -7,6 +7,8 @@ use Test::More;
 use Test::Deep;
 use Test::FailWarnings;
 
+use Data::Dumper;
+
 use_ok('Protocol::DBus::Message');
 
 my @stringify_le = (
@@ -35,7 +37,17 @@ for my $t (@stringify_le) {
         $out_sr,
         \$t->{'out'},
         $t->{'label'},
-    );
+    ) or diag _terse_dump( [ $out_sr, \$t->{'out'} ] );
+}
+
+sub _terse_dump {
+    my ($thing) = @_;
+
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 0;
+    local $Data::Dumper::Useqq = 1;
+
+    return Dumper($thing);
 }
 
 #----------------------------------------------------------------------
@@ -174,13 +186,21 @@ my @parse_le = (
 );
 
 for my $t (@parse_le) {
-    my $msg = Protocol::DBus::Message->parse( $t->{'in'} );
+    my $in_copy = $t->{'in'};
+
+    my $msg = Protocol::DBus::Message->parse( \$in_copy );
 
     cmp_deeply(
         $msg,
         methods( @{ $t->{'methods'} } ),
         'parse: ' . $t->{'label'},
     ) or diag explain $msg;
+
+    is(
+        length($in_copy),
+        $t->{'leftover'} || 0,
+        '… and the buffer was trimmed appropriately',
+    );
 }
 
 done_testing();

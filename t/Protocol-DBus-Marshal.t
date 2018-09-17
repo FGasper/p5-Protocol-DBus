@@ -101,6 +101,7 @@ my @marshal_le_tests = (
 
 for my $t (@marshal_le_tests) {
     my $out = Protocol::DBus::Marshal::marshal_le( @{ $t->{'in'} } );
+
     is(
         $$out,
         $t->{'out'},
@@ -301,7 +302,7 @@ for my $t (@positive_le_tests) {
 
     #$str .= "] → [" . join(', ', map { Dumper($_) } @{ $t->{'out'} } ) . ']';
 
-    my ($data, $offset_delta) = Protocol::DBus::Marshal::unmarshal_le(@{ $t->{'in'} });
+    my ($data, $offset_delta) = Protocol::DBus::Marshal::unmarshal_le(\$buf, $buf_offset, $sig);
 
     cmp_deeply(
         [$data, $offset_delta],

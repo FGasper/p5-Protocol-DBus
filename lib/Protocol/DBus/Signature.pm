@@ -3,7 +3,7 @@ package Protocol::DBus::Signature;
 use strict;
 use warnings;
 
-# Returns the length of the single complete type at $sct_offset.
+# Returns a list of single complete types (SCTs).
 
 sub split {
     my ($sig) = @_;
@@ -17,6 +17,8 @@ sub split {
 
     return @scts;
 }
+
+# Returns the length of the single complete type at $sct_offset.
 
 sub get_sct_length {
     my ($sig, $sct_offset) = @_;
