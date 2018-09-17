@@ -23,12 +23,17 @@ sub parse {
                 last;
             }
 
-            die "No SIGNATURE header field!" if !defined $body_sig;
+            if ($hdr->[4]) {
+                die "No SIGNATURE header field!" if !defined $body_sig;
+            }
 
-            my ($body_data) = Protocol::DBus::Marshal->can( 'unmarshal_' . ($is_be ? 'be' : 'le') )->($buf, $hdr_len, $body_sig);
+            my $body_data;
+            if ($body_sig) {
+                ($body_data) = Protocol::DBus::Marshal->can( 'unmarshal_' . ($is_be ? 'be' : 'le') )->($buf, $hdr_len, $body_sig);
+            }
 
-            my %self;
-            @self{'type', 'flags', 'body_length', 'serial', 'hfields', 'body'} = (@{$hdr}[1, 2, 4, 5, 6], $body_data);
+            my %self = ( _body_sig => $body_sig );
+            @self{'_type', '_flags', 'body_length', '_serial', '_hfields', '_body'} = (@{$hdr}[1, 2, 4, 5, 6], $body_data);
 
             return bless \%self, $class;
         }
@@ -70,15 +75,15 @@ sub new {
                 ],
             );
 
-            if ($hf->[0] == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
+            if ($field[0] == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
                 $opts{'_body_sig'} = $hf->[1];
             }
 
-            push @hfields, \@field;
+            push @hfields, bless \@field, 'Protocol::DBus::Type::Struct';
         }
     }
 
-    $opts{'hfields'} = \@hfields;
+    $opts{'hfields'} = bless \@hfields, 'Protocol::DBus::Type::Array';
 
     if (defined $opts{'body'} && length $opts{'body'}) {
         if (!$opts{'_body_sig'}) {
@@ -89,10 +94,34 @@ sub new {
         $opts{'body'} = q<>;
     }
 
-    my %self = map { "$_" => $opts{$_} } keys %opts;
+    my %self = map { ( "_$_" => $opts{$_} ) } keys %opts;
 
     return bless \%self, $class;
 }
+
+#----------------------------------------------------------------------
+
+sub body {
+    return $_[0]->{'_body'};
+}
+
+sub hfields {
+    return $_[0]->{'_hfields'};
+}
+
+sub type {
+    return $_[0]->{'_type'};
+}
+
+sub flags {
+    return $_[0]->{'_flags'};
+}
+
+sub serial {
+    return $_[0]->{'_serial'};
+}
+
+#----------------------------------------------------------------------
 
 our $_use_be;
 
@@ -118,21 +147,21 @@ sub _to_string {
         $self->{'_hfields'},
     ];
 
-    my $hdr_buf = Protocol::DBus::Marshal->( $_is_be ? 'marshal_be' : 'marshal_le' )->(
+    my $buf_sr = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
         Protocol::DBus::Message::Header::SIGNATURE(),
         $data,
     );
 
-    Protocol::DBus::Pack::align_str($hdr_buf, 8);
+    Protocol::DBus::Pack::align_str($$buf_sr, 8);
 
     if ($self->{'_body_sig'}) {
-        $hdr_buf .= Protocol::DBus::Marshal->( $_is_be ? 'marshal_be' : 'marshal_le' )->(
+        ${ $buf_sr } .= ${ Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
             $self->{'_body_sig'},
             $self->{'_body'},
-        );
-    );
+        ) };
+    }
 
-    return \$hdr_buf;
+    return $buf_sr;
 }
 
 1;
