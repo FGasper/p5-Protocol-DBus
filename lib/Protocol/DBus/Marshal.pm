@@ -133,7 +133,7 @@ sub _marshal_array {
 #----------------------------------------------------------------------
 
 sub _unmarshal {
-    my ($buf, $buf_offset, $sig) = @_;
+    my ($buf_sr, $buf_offset, $sig) = @_;
 
     my @items;
 
@@ -144,7 +144,7 @@ sub _unmarshal {
         my $next_sct_len = Protocol::DBus::Signature::get_sct_length($sig, $sig_offset);
 
         my ($item, $item_length) = _unmarshal_sct(
-            $buf,
+            $buf_sr,
             $buf_offset,
             substr( $sig, $sig_offset, $next_sct_len ),
         );
@@ -169,14 +169,14 @@ sub unmarshal_sct_be {
 # SCT = “single complete type”.
 # Returns the value plus its marshaled length.
 sub _unmarshal_sct {
-    my ($buf, $buf_offset, $sct_sig) = @_;
+    my ($buf_sr, $buf_offset, $sct_sig) = @_;
 
     my $buf_start = $buf_offset;
 
     if (substr($sct_sig, 0, 1) eq 'a') {
         Protocol::DBus::Pack::align($buf_offset, 4);
 
-        my $array_len = unpack "\@$buf_offset L$_ENDIAN_PACK", $buf;
+        my $array_len = unpack "\@$buf_offset L$_ENDIAN_PACK", $$buf_sr;
         $buf_offset += 4;   #uint32 length
 
         my $obj;
@@ -190,7 +190,7 @@ sub _unmarshal_sct {
             # The value can be any SCT.
             my $value_type = substr( $sct_sig, 3, Protocol::DBus::Signature::get_sct_length($sct_sig, 3) );
 
-            $obj = _unmarshal_to_hashref($buf, $buf_offset, $array_len, $key_type, $value_type);
+            $obj = _unmarshal_to_hashref($buf_sr, $buf_offset, $array_len, $key_type, $value_type);
             $buf_offset += $array_len;
         }
 
@@ -207,7 +207,7 @@ sub _unmarshal_sct {
             my $array_end = $buf_offset + $array_len;
 
             while ($buf_offset < $array_end) {
-                my ($item, $item_length) = _unmarshal_sct($buf, $buf_offset, $array_sig);
+                my ($item, $item_length) = _unmarshal_sct($buf_sr, $buf_offset, $array_sig);
 
                 $buf_offset += $item_length;
 
@@ -228,23 +228,23 @@ sub _unmarshal_sct {
 
     Protocol::DBus::Pack::align($buf_offset, Protocol::DBus::Pack::ALIGNMENT()->{$sct_sig});
 
-    my $val = unpack("\@$buf_offset ($pack_tmpl)$_ENDIAN_PACK", $buf);
+    my $val = unpack("\@$buf_offset ($pack_tmpl)$_ENDIAN_PACK", $$buf_sr);
 
     return ($val, $buf_offset - $buf_start + Protocol::DBus::Pack::WIDTH()->{$sct_sig} + ($is_string ? length($val) : 0));
 }
 
 sub _unmarshal_variant {
-    my ($buf, $buf_offset, $sct_sig) = @_;
+    my ($buf_sr, $buf_offset, $sct_sig) = @_;
 
     my $buf_start = $buf_offset;
 
-    my ($sig, $len) = _unmarshal_sct( $buf, $buf_offset, 'g' );
+    my ($sig, $len) = _unmarshal_sct( $buf_sr, $buf_offset, 'g' );
 
-    die sprintf("No sig ($len bytes?) from “%s”?", substr($buf, $buf_offset)) if !length $sig;
+    die sprintf("No sig ($len bytes?) from “%s”?", substr($$buf_sr, $buf_offset)) if !length $sig;
 
     $buf_offset += $len;
 
-    (my $val, $len) = _unmarshal_sct( $buf, $buf_offset, $sig );
+    (my $val, $len) = _unmarshal_sct( $buf_sr, $buf_offset, $sig );
 
     return( $val, $len + $buf_offset - $buf_start );
 }
@@ -266,7 +266,7 @@ sub _get_pack_template {
 }
 
 sub _unmarshal_to_hashref {
-    my ($buf, $buf_offset, $array_len, $key_type, $value_type) = @_;
+    my ($buf_sr, $buf_offset, $array_len, $key_type, $value_type) = @_;
 
     my %items;
     my $obj = bless \%items, 'Protocol::DBus::Type::Dict';
@@ -274,11 +274,11 @@ sub _unmarshal_to_hashref {
     my $end_offset = $buf_offset + $array_len;
 
     while ($buf_offset < $end_offset) {
-        my ($key, $len_in_buf) = _unmarshal_sct($buf, $buf_offset, $key_type);
+        my ($key, $len_in_buf) = _unmarshal_sct($buf_sr, $buf_offset, $key_type);
 
         $buf_offset += $len_in_buf;
 
-        (my $val, $len_in_buf) = _unmarshal_sct($buf, $buf_offset, $value_type);
+        (my $val, $len_in_buf) = _unmarshal_sct($buf_sr, $buf_offset, $value_type);
 
         $buf_offset += $len_in_buf;
 
@@ -290,7 +290,7 @@ sub _unmarshal_to_hashref {
 }
 
 sub _unmarshal_struct {
-    my ($buf, $buf_offset, $sct_sig) = @_;
+    my ($buf_sr, $buf_offset, $sct_sig) = @_;
 
     # Remove “()” and just parse as a series of types.
     chop $sct_sig;
@@ -300,12 +300,16 @@ sub _unmarshal_struct {
 
     Protocol::DBus::Pack::align($buf_offset, 8);
 
-    my ($items_ar, $len) = _unmarshal($buf, $buf_offset, $sct_sig);
+    my ($items_ar, $len) = _unmarshal($buf_sr, $buf_offset, $sct_sig);
     bless $items_ar, 'Protocol::DBus::Type::Struct';
 
     return ($items_ar, ($buf_offset - $buf_start) + $len);
 }
 
+#----------------------------------------------------------------------
+# The logic below is unused. I was under the impression that I’d need a
+# way to determine if a message body’s length matches the given SIGNATURE,
+# but of course we don’t because the header includes the body length.
 #----------------------------------------------------------------------
 
 sub buffer_length_satisfies_signature_le {

@@ -55,12 +55,12 @@ use constant {
 my ($_is_big_endian, $prot_version);
 
 sub parse_simple {
-    my ($buf) = @_;
+    my ($buf_sr) = @_;
 
     Call::Context::must_be_list();
 
-    if (length($buf) >= _MIN_HEADER_LENGTH()) {
-        ($_is_big_endian, $prot_version) = unpack 'axxC', $buf;
+    if (length($$buf_sr) >= _MIN_HEADER_LENGTH()) {
+        ($_is_big_endian, $prot_version) = unpack 'axxC', $$buf_sr;
 
         if (1 != $prot_version) {
             die "Protocol version must be 1, not “$prot_version”!";
@@ -70,13 +70,13 @@ sub parse_simple {
 
         my $array_length = unpack(
             '@12 ' . ($_is_big_endian ? 'N' : 'V'),
-            $buf,
+            $$buf_sr,
         );
 
-        if (length($buf) >= (_MIN_HEADER_LENGTH + $array_length)) {
+        if (length($$buf_sr) >= (_MIN_HEADER_LENGTH + $array_length)) {
             my ($content, $length) = Protocol::DBus::Marshal->can(
                 $_is_big_endian ? 'unmarshal_be' : 'unmarshal_le'
-            )->($buf, 0, SIGNATURE());
+            )->($buf_sr, 0, SIGNATURE());
 
             Protocol::DBus::Pack::align( $length, 8 );
 

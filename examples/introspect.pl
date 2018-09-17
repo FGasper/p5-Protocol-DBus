@@ -45,7 +45,7 @@ syswrite $s, ${ $msg->to_string_le() };
 my $buf = q<>;
 $msg = undef;
 while (sysread $s, $buf, 32768, length($buf)) {
-    $msg = Protocol::DBus::Message->parse($buf);
+    $msg = Protocol::DBus::Message->parse(\$buf);
     last if $msg;
 }
 
