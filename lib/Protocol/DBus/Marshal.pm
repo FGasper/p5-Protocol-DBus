@@ -68,6 +68,12 @@ sub _marshal {
 
         # Anything else is a basic type.
         else {
+            if ($sct eq 'o') {
+                $datum =~ m<\A/(?:[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*)?\z> or do {
+                    die "Invalid object path: “$datum”";
+                };
+            }
+
             Protocol::DBus::Pack::align_str($$buf_sr, Protocol::DBus::Pack::ALIGNMENT()->{$sct});
 
             my $pack = Protocol::DBus::Pack::NUMERIC()->{$sct};
@@ -97,10 +103,18 @@ sub _marshal_array {
     # after the length. This only affects 8-byte-aligned types.
     my $compensate_align8;
 
+    substr($sct, 0, 1, q<>);    # chop off the leading “a”
+
+    if ($array_start % 8) {
+        $compensate_align8 = (0 == index($sct, '('));
+        $compensate_align8 ||= (0 == index($sct, '{'));
+        $compensate_align8 ||= ((Protocol::DBus::Pack::ALIGNMENT()->{$sct} || 0) == 8);
+    }
+
     # DICT_ENTRY arrays are given as plain Perl hashes
-    if (index($sct, '{') == 1) {
-        my $key_sig = substr($sct, 2, 1);
-        my $value_sig = substr($sct, 3, -1);
+    if (0 == index($sct, '{')) {
+        my $key_sig = substr($sct, 1, 1);
+        my $value_sig = substr($sct, 2, -1);
 
         for my $key ( keys %{ $data } ) {
             Protocol::DBus::Pack::align_str($$buf_sr, 8);
@@ -111,14 +125,6 @@ sub _marshal_array {
 
     # Any other array is given as an array.
     else {
-        substr($sct, 0, 1, q<>);    # chop off the leading “a”
-
-        if ($array_start % 8) {
-            $compensate_align8 = (0 == index($sct, '('));
-            $compensate_align8 ||= (0 == index($sct, '{'));
-            $compensate_align8 ||= (Protocol::DBus::Pack::ALIGNMENT()->{$sct} || 0) == 8;
-        }
-
         for my $item ( @$data ) {
             _marshal($sct, $item, $buf_sr);
         }
@@ -276,6 +282,8 @@ sub _unmarshal_to_hashref {
     my $end_offset = $buf_offset + $array_len;
 
     while ($buf_offset < $end_offset) {
+        Protocol::DBus::Pack::align($buf_offset, 8);
+
         my ($key, $len_in_buf) = _unmarshal_sct($buf_sr, $buf_offset, $key_type);
 
         $buf_offset += $len_in_buf;

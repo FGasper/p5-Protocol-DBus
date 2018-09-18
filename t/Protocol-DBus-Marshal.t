@@ -66,8 +66,8 @@ my @marshal_le_tests = (
     },
 
     {
-        in => [ 'o', 'ybn' ],
-        out => "\x03\0\0\0ybn\0",
+        in => [ 'o', '/yb' ],
+        out => "\x03\0\0\0/yb\0",
     },
 
     #----------------------------------------------------------------------
@@ -96,6 +96,37 @@ my @marshal_le_tests = (
             ],
         ],
         out => "\x7f\0\0\0\227\0\0\0\1\1o\0\37\0\0\0/org/freedesktop/NetworkManager\0\3\1s\0\n\0\0\0Introspect\0\0\0\0\0\0\2\1s\0#\0\0\0org.freedesktop.DBus.Introspectable\0\0\0\0\0\6\1s\0\36\0\0\0org.freedesktop.NetworkManager\0",
+    },
+
+    {
+        in => [
+            'uua(yv)',
+            [
+                2,
+                127,
+                [
+                    [ 1 => [ o => '/org/freedesktop/NetworkManager' ] ],
+                    [ 3 => [ s => 'Introspect' ] ],
+                    [ 2 => [ s => 'org.freedesktop.DBus.Introspectable' ] ],
+                    [ 6 => [ s => 'org.freedesktop.NetworkManager' ] ],
+                ],
+            ],
+        ],
+        out => "\2\0\0\0\x7f\0\0\0\227\0\0\0\0\0\0\0\1\1o\0\37\0\0\0/org/freedesktop/NetworkManager\0\3\1s\0\n\0\0\0Introspect\0\0\0\0\0\0\2\1s\0#\0\0\0org.freedesktop.DBus.Introspectable\0\0\0\0\0\6\1s\0\36\0\0\0org.freedesktop.NetworkManager\0",
+    },
+
+    {
+        in => [
+            'uua{yv}',
+            [
+                127,
+                2,
+                {
+                    1 => [ o => '/org/freedesktop/NetworkManager' ],
+                },
+            ],
+        ],
+        out => "\x7f\0\0\0\2\0\0\0(\0\0\0\0\0\0\0\1\1o\0\37\0\0\0/org/freedesktop/NetworkManager\0",
     },
 );
 
