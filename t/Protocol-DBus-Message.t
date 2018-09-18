@@ -26,6 +26,22 @@ my @stringify_le = (
         },
         out => "l\1\0\1\0\0\0\0\1\0\0\0m\0\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\3\1s\0\5\0\0\0Hello\0\0\0\2\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0",
     },
+    {
+        label => '“GetAll” call',
+        in => {
+            type => 'METHOD_CALL',
+            serial => 3,
+            hfields => [
+                [ SIGNATURE => 's' ],
+                [ PATH => '/org/freedesktop/DBus' ],
+                [ MEMBER => 'GetAll' ],
+                [ INTERFACE => 'org.freedesktop.DBus.Properties' ],
+                [ DESTINATION => 'org.freedesktop.DBus' ],
+            ],
+            body => \'org.freedesktop.DBus',
+        },
+        out => "l\1\0\1\31\0\0\0\3\0\0\0}\0\0\0\10\1g\0\1s\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\3\1s\0\6\0\0\0GetAll\0\0\2\1s\0\37\0\0\0org.freedesktop.DBus.Properties\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\24\0\0\0org.freedesktop.DBus\0",
+    },
 );
 
 for my $t (@stringify_le) {
@@ -181,6 +197,92 @@ my @parse_le = (
                     ),
                 ] ),
             ),
+        ],
+    },
+    {
+        label => '“GetAll” response',
+        in => "l\2\1\1\251\0\0\0\3\0\0\0E\0\0\0\6\1s\0\6\0\0\0:1.179\0\0\5\1u\0\2\0\0\0\10\1g\0\5a{sv}\0\0\0\0\0\0\7\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\241\0\0\0\0\0\0\0\10\0\0\0Features\0\2as\0\0\0\0&\0\0\0\10\0\0\0AppArmor\0\0\0\0\21\0\0\0SystemdActivation\0\0\0\n\0\0\0Interfaces\0\2as\0\0I\0\0\0\37\0\0\0org.freedesktop.DBus.Monitoring\0 \0\0\0org.freedesktop.DBus.Debug.Stats\0",
+        methods => [
+            [ type_is => 'METHOD_RETURN' ] => 1,
+            [ flags_have => 'NO_REPLY_EXPECTED' ] => 1,
+            hfields => all(
+                Isa('Protocol::DBus::Type::Array'),
+                noclass([
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.179' ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 2 ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 'a{sv}' ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus'] ),
+                    ),
+                ]),
+            ),
+            body => [
+                all(
+                    Isa('Protocol::DBus::Type::Dict'),
+                    noclass( {
+                        Features => all(
+                            Isa('Protocol::DBus::Type::Array'),
+                            noclass( [
+                                'AppArmor',
+                                'SystemdActivation',
+                            ] ),
+                        ),
+                        Interfaces => all(
+                            Isa('Protocol::DBus::Type::Array'),
+                            noclass( [
+                                'org.freedesktop.DBus.Monitoring',
+                                'org.freedesktop.DBus.Debug.Stats',
+                            ] ),
+                        ),
+                    } ),
+                ),
+            ],
+        ],
+    },
+    {
+        label => 'error',
+        in => "l\3\1\1S\0\0\0\3\0\0\0u\0\0\0\6\1s\0\6\0\0\0:1.123\0\0\4\1s\0)\0\0\0org.freedesktop.DBus.Error.ServiceUnknown\0\0\0\0\0\0\0\5\1u\0\2\0\0\0\10\1g\0\1s\0\0\7\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0N\0\0\0The name org.freedesktop.NetworkManager was not provided by any .service files\0",
+        methods => [
+            [ type_is => 'ERROR' ] => 1,
+            [ flags_have => 'NO_REPLY_EXPECTED' ] => 1,
+            hfields => all(
+                Isa('Protocol::DBus::Type::Array'),
+                noclass([
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.123' ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'ERROR_NAME'} => 'org.freedesktop.DBus.Error.ServiceUnknown' ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 2 ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's' ] ),
+                    ),
+                    all(
+                        Isa('Protocol::DBus::Type::Struct'),
+                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus'] ),
+                    ),
+                ]),
+            ),
+            body => [
+                'The name org.freedesktop.NetworkManager was not provided by any .service files',
+            ],
         ],
     },
 );

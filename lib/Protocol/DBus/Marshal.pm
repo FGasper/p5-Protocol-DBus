@@ -234,7 +234,7 @@ sub _unmarshal_sct {
 }
 
 sub _unmarshal_variant {
-    my ($buf_sr, $buf_offset, $sct_sig) = @_;
+    my ($buf_sr, $buf_offset) = @_;
 
     my $buf_start = $buf_offset;
 
@@ -270,6 +270,8 @@ sub _unmarshal_to_hashref {
 
     my %items;
     my $obj = bless \%items, 'Protocol::DBus::Type::Dict';
+
+    Protocol::DBus::Pack::align($buf_offset, 8);
 
     my $end_offset = $buf_offset + $array_len;
 
