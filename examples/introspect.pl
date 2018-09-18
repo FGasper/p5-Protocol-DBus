@@ -60,10 +60,16 @@ $msg = Protocol::DBus::Message->new(
     serial => 2,
     hfields => [
         [ PATH => '/org/freedesktop/DBus' ],
-        [ INTERFACE => 'org.freedesktop.DBus.Introspectable' ],
+        [ INTERFACE => 'org.freedesktop.DBus.Properties' ],
         [ DESTINATION => 'org.freedesktop.DBus' ],
-        [ MEMBER => 'Introspect' ],
+        [ SIGNATURE => 's' ],
+        [ MEMBER => 'GetAll' ],
+#        [ PATH => '/org/freedesktop/DBus' ],
+#        [ INTERFACE => 'org.freedesktop.DBus.Introspectable' ],
+#        [ DESTINATION => 'org.freedesktop.DBus' ],
+#        [ MEMBER => 'Introspect' ],
     ],
+    body => \'org.freedesktop.DBus',
 );
 
 syswrite $s, ${ $msg->to_string_le() };
@@ -78,9 +84,13 @@ while (1) {
 
 sub _get_msg {
     my $msg;
+print "-- before read\n";
     while ($buf || sysread $s, $buf, 32768, length($buf)) {
+print "-- before parse\n";
         $msg = Protocol::DBus::Message->parse(\$buf);
+print "-- after parse\n";
         if ($msg) {
+print "-- got message\n";
             print Dumper $msg;
             return $msg;
         }

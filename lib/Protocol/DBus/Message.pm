@@ -80,7 +80,7 @@ sub new {
             );
 
             if ($field[0] == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
-                $opts{'_body_sig'} = $hf->[1];
+                $opts{'body_sig'} = $hf->[1];
             }
 
             push @hfields, bless \@field, 'Protocol::DBus::Type::Struct';
@@ -90,7 +90,10 @@ sub new {
     $opts{'hfields'} = bless \@hfields, 'Protocol::DBus::Type::Array';
 
     if ($opts{'body'}) {
-        die "“body” requires a SIGNATURE header!" if !$opts{'_body_sig'};
+        die "“body” requires a SIGNATURE header!" if !$opts{'body_sig'};
+    }
+    elsif ($opts{'body_sig'}) {
+        die "SIGNATURE header given without “body”!";
     }
     else {
         $opts{'body'} = \q<>;
@@ -161,12 +164,21 @@ sub to_string_be {
 sub _to_string {
     my ($self) = @_;
 
+    my $body_m_sr;
+
+    if ($self->{'_body_sig'}) {
+        $body_m_sr = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
+            $self->{'_body_sig'},
+            ${ $self->{'_body'} },
+        );
+    }
+
     my $data = [
         ord('l'),
         $self->{'_type'},
         $self->{'_flags'},
         _PROTOCOL_VERSION(),
-        length( ${ $self->{'_body'} } ),
+        $body_m_sr ? length( $$body_m_sr ) : 0,
         $self->{'_serial'},
         $self->{'_hfields'},
     ];
@@ -177,13 +189,9 @@ sub _to_string {
     );
 
     Protocol::DBus::Pack::align_str($$buf_sr, 8);
+printf "after align8: %d (8 * %d)\n", length($$buf_sr), length($$buf_sr) / 8;
 
-    if ($self->{'_body_sig'}) {
-        ${ $buf_sr } .= ${ Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
-            $self->{'_body_sig'},
-            $self->{'_body'},
-        ) };
-    }
+    $$buf_sr .= $$body_m_sr if $body_m_sr;
 
     return $buf_sr;
 }
