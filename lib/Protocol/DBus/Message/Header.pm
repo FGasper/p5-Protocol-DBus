@@ -12,7 +12,10 @@ use Protocol::DBus::Pack ();
 use constant {
     _MIN_HEADER_LENGTH => 16,
 
-    SIGNATURE => 'yyyyuua(yv)',
+    # The spec says to parse as array of pairs, but a dict makes
+    # more sense and is compatible. (The spec doesn’t proscribe duplicate
+    # headers, but the reference implementation does.)
+    SIGNATURE => 'yyyyuua{yv}',
 
     MESSAGE_TYPE => {
         METHOD_CALL => 1,

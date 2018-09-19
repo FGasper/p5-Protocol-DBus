@@ -41,10 +41,10 @@ my $msg = Protocol::DBus::Message->new(
     type => 'METHOD_CALL',
     serial => 1,
     hfields => [
-        [ PATH => '/org/freedesktop/DBus' ],
-        [ INTERFACE => 'org.freedesktop.DBus' ],
-        [ DESTINATION => 'org.freedesktop.DBus' ],
-        [ MEMBER => 'Hello' ],
+        PATH => '/org/freedesktop/DBus',
+        INTERFACE => 'org.freedesktop.DBus',
+        DESTINATION => 'org.freedesktop.DBus',
+        MEMBER => 'Hello',
     ],
 );
 
@@ -59,11 +59,11 @@ $msg = Protocol::DBus::Message->new(
     type => 'METHOD_CALL',
     serial => 2,
     hfields => [
-        [ PATH => '/org/freedesktop/DBus' ],
-        [ INTERFACE => 'org.freedesktop.DBus.Properties' ],
-        [ DESTINATION => 'org.freedesktop.DBus' ],
-        [ SIGNATURE => 's' ],
-        [ MEMBER => 'GetAll' ],
+        PATH => '/org/freedesktop/DBus',
+        INTERFACE => 'org.freedesktop.DBus.Properties',
+        DESTINATION => 'org.freedesktop.DBus',
+        SIGNATURE => 's',
+        MEMBER => 'GetAll',
 #        [ PATH => '/org/freedesktop/DBus' ],
 #        [ INTERFACE => 'org.freedesktop.DBus.Introspectable' ],
 #        [ DESTINATION => 'org.freedesktop.DBus' ],

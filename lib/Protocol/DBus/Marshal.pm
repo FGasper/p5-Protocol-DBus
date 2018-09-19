@@ -8,6 +8,9 @@ use Protocol::DBus::Signature ();
 
 our $_ENDIAN_PACK;
 
+# for testing
+our $DICT_CANONICAL;
+
 # data, sig
 sub marshal_le {
     local $_ENDIAN_PACK = '<';
@@ -116,7 +119,7 @@ sub _marshal_array {
         my $key_sig = substr($sct, 1, 1);
         my $value_sig = substr($sct, 2, -1);
 
-        for my $key ( keys %{ $data } ) {
+        for my $key ( $DICT_CANONICAL ? (sort keys %$data) : keys %$data ) {
             Protocol::DBus::Pack::align_str($$buf_sr, 8);
             _marshal($key_sig, $key,$buf_sr);
             _marshal( $value_sig, $data->{$key}, $buf_sr);

@@ -11,6 +11,8 @@ use Data::Dumper;
 
 use_ok('Protocol::DBus::Message');
 
+use Protocol::DBus::Marshal;
+
 my @stringify_le = (
     {
         label => 'bare “Hello” message',
@@ -18,13 +20,13 @@ my @stringify_le = (
             type => 'METHOD_CALL',
             serial => 1,
             hfields => [
-                [ PATH => '/org/freedesktop/DBus' ],
-                [ MEMBER => 'Hello' ],
-                [ INTERFACE => 'org.freedesktop.DBus' ],
-                [ DESTINATION => 'org.freedesktop.DBus' ],
+                PATH => '/org/freedesktop/DBus',
+                INTERFACE => 'org.freedesktop.DBus',
+                MEMBER => 'Hello',
+                DESTINATION => 'org.freedesktop.DBus',
             ],
         },
-        out => "l\1\0\1\0\0\0\0\1\0\0\0m\0\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\3\1s\0\5\0\0\0Hello\0\0\0\2\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0",
+        out => "l\1\0\1\0\0\0\0\1\0\0\0m\0\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\2\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\3\1s\0\5\0\0\0Hello\0\0\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0",
     },
     {
         label => '“GetAll” call',
@@ -32,19 +34,22 @@ my @stringify_le = (
             type => 'METHOD_CALL',
             serial => 3,
             hfields => [
-                [ SIGNATURE => 's' ],
-                [ PATH => '/org/freedesktop/DBus' ],
-                [ MEMBER => 'GetAll' ],
-                [ INTERFACE => 'org.freedesktop.DBus.Properties' ],
-                [ DESTINATION => 'org.freedesktop.DBus' ],
+                PATH => '/org/freedesktop/DBus',
+                INTERFACE => 'org.freedesktop.DBus.Properties',
+                MEMBER => 'GetAll',
+                DESTINATION => 'org.freedesktop.DBus',
+                SIGNATURE => 's',
             ],
             body => \'org.freedesktop.DBus',
         },
-        out => "l\1\0\1\31\0\0\0\3\0\0\0}\0\0\0\10\1g\0\1s\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\3\1s\0\6\0\0\0GetAll\0\0\2\1s\0\37\0\0\0org.freedesktop.DBus.Properties\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\24\0\0\0org.freedesktop.DBus\0",
+        out => "l\1\0\1\31\0\0\0\3\0\0\0\177\0\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\2\1s\0\37\0\0\0org.freedesktop.DBus.Properties\0\3\1s\0\6\0\0\0GetAll\0\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\10\1g\0\1s\0\0\24\0\0\0org.freedesktop.DBus\0",
     },
 );
+use Carp::Always;
 
 for my $t (@stringify_le) {
+    local $Protocol::DBus::Marshal::DICT_CANONICAL = 1;
+
     my $msg = Protocol::DBus::Message->new( %{ $t->{'in'} } );
 
     my $out_sr = $msg->to_string_le();
@@ -77,25 +82,13 @@ my @parse_le = (
             flags => 0,
             serial => 1,
             hfields => all(
-                Isa('Protocol::DBus::Type::Array'),
-                noclass( [
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'PATH'} => '/org/freedesktop/DBus' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'MEMBER'} => 'Hello' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'INTERFACE'} => 'org.freedesktop.DBus' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => 'org.freedesktop.DBus'] ),
-                    ),
-                ] ),
+                Isa('Protocol::DBus::Type::Dict'),
+                noclass( {
+                    Protocol::DBus::Message::Header::FIELD()->{'PATH'} => '/org/freedesktop/DBus',
+                    Protocol::DBus::Message::Header::FIELD()->{'MEMBER'} => 'Hello',
+                    Protocol::DBus::Message::Header::FIELD()->{'INTERFACE'} => 'org.freedesktop.DBus',
+                    Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => 'org.freedesktop.DBus',
+                } ),
             ),
         ],
     },
@@ -107,25 +100,13 @@ my @parse_le = (
             flags => 1,
             serial => 1,
             hfields => all(
-                Isa('Protocol::DBus::Type::Array'),
-                noclass( [
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.174' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 1 ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus'] ),
-                    ),
-                ] ),
+                Isa('Protocol::DBus::Type::Dict'),
+                noclass( {
+                    Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.174',
+                    Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 1,
+                    Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's',
+                    Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus',
+                } ),
             ),
             body => [ ':1.174' ],
         ]
@@ -138,33 +119,15 @@ my @parse_le = (
             flags => 1,
             serial => 2,
             hfields => all(
-                Isa('Protocol::DBus::Type::Array'),
-                noclass( [
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'PATH'} => '/org/freedesktop/DBus' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'INTERFACE'} => 'org.freedesktop.DBus' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'MEMBER'} => 'NameAcquired' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.174' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus'] ),
-                    ),
-                ] ),
+                Isa('Protocol::DBus::Type::Dict'),
+                noclass( {
+                    Protocol::DBus::Message::Header::FIELD()->{'PATH'} => '/org/freedesktop/DBus',
+                    Protocol::DBus::Message::Header::FIELD()->{'INTERFACE'} => 'org.freedesktop.DBus',
+                    Protocol::DBus::Message::Header::FIELD()->{'MEMBER'} => 'NameAcquired',
+                    Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.174',
+                    Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's',
+                    Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus',
+                } ),
             ),
             body => [ ':1.174' ],
         ],
@@ -177,25 +140,13 @@ my @parse_le = (
             flags => 0,
             serial => 2,
             hfields => all(
-                Isa('Protocol::DBus::Type::Array'),
-                noclass( [
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'PATH'} => '/org/freedesktop/NetworkManager' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'MEMBER'} => 'Introspect' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'INTERFACE'} => 'org.freedesktop.DBus.Introspectable' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => 'org.freedesktop.NetworkManager' ] ),
-                    ),
-                ] ),
+                Isa('Protocol::DBus::Type::Dict'),
+                noclass( {
+                    Protocol::DBus::Message::Header::FIELD()->{'PATH'} => '/org/freedesktop/NetworkManager',
+                    Protocol::DBus::Message::Header::FIELD()->{'MEMBER'} => 'Introspect',
+                    Protocol::DBus::Message::Header::FIELD()->{'INTERFACE'} => 'org.freedesktop.DBus.Introspectable',
+                    Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => 'org.freedesktop.NetworkManager',
+                } ),
             ),
         ],
     },
@@ -206,25 +157,13 @@ my @parse_le = (
             [ type_is => 'METHOD_RETURN' ] => 1,
             [ flags_have => 'NO_REPLY_EXPECTED' ] => 1,
             hfields => all(
-                Isa('Protocol::DBus::Type::Array'),
-                noclass([
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.179' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 2 ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 'a{sv}' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus'] ),
-                    ),
-                ]),
+                Isa('Protocol::DBus::Type::Dict'),
+                noclass( {
+                    Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.179',
+                    Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 2,
+                    Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 'a{sv}',
+                    Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus',
+                }),
             ),
             body => [
                 all(
@@ -256,29 +195,14 @@ my @parse_le = (
             [ type_is => 'ERROR' ] => 1,
             [ flags_have => 'NO_REPLY_EXPECTED' ] => 1,
             hfields => all(
-                Isa('Protocol::DBus::Type::Array'),
-                noclass([
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.123' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'ERROR_NAME'} => 'org.freedesktop.DBus.Error.ServiceUnknown' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 2 ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's' ] ),
-                    ),
-                    all(
-                        Isa('Protocol::DBus::Type::Struct'),
-                        noclass( [ Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus'] ),
-                    ),
-                ]),
+                Isa('Protocol::DBus::Type::Dict'),
+                noclass( {
+                    Protocol::DBus::Message::Header::FIELD()->{'DESTINATION'} => ':1.123',
+                    Protocol::DBus::Message::Header::FIELD()->{'ERROR_NAME'} => 'org.freedesktop.DBus.Error.ServiceUnknown',
+                    Protocol::DBus::Message::Header::FIELD()->{'REPLY_SERIAL'} => 2,
+                    Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} => 's',
+                    Protocol::DBus::Message::Header::FIELD()->{'SENDER'} => 'org.freedesktop.DBus',
+                } ),
             ),
             body => [
                 'The name org.freedesktop.NetworkManager was not provided by any .service files',

@@ -14,14 +14,8 @@ sub parse {
     if ( my ($hdr, $hdr_len, $is_be) = Protocol::DBus::Message::Header::parse_simple($buf_sr) ) {
 
         if (length($$buf_sr) >= ($hdr_len + $hdr->[4])) {
-            my $body_sig;
 
-            for my $hfield ( @{ $hdr->[6] } ) {
-                next if $hfield->[0] != Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'};
-
-                $body_sig = $hfield->[1];
-                last;
-            }
+            my $body_sig = $hdr->[6]{ Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'} };
 
             if ($hdr->[4]) {
                 die "No SIGNATURE header field!" if !defined $body_sig;
@@ -65,29 +59,32 @@ sub new {
 
     $opts{'flags'} = $flags;
 
-    my @hfields;
+    my %hfields;
 
     if ($opts{'hfields'}) {
-        for my $hf ( @{ $opts{'hfields'} } ) {
-            my @field = (
-                Protocol::DBus::Message::Header::FIELD()->{$hf->[0]} || do {
-                    die "Bad “hfields” name: $hf->[0]";
-                },
-                [
-                    Protocol::DBus::Message::Header::FIELD_SIGNATURE()->{$hf->[0]},
-                    $hf->[1],
-                ],
-            );
+        my $field_num;
 
-            if ($field[0] == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
-                $opts{'body_sig'} = $hf->[1];
+        my $fi = 0;
+        while ( $fi < @{ $opts{'hfields'} } ) {
+            my ($name, $value) = @{ $opts{'hfields'} }[ $fi, 1 + $fi ];
+            $fi += 2;
+
+            $field_num = Protocol::DBus::Message::Header::FIELD()->{$name} || do {
+                die "Bad “hfields” name: “$name”";
+            };
+
+            $hfields{ $field_num } = [
+                Protocol::DBus::Message::Header::FIELD_SIGNATURE()->{$name},
+                $value,
+            ];
+
+            if ($field_num == Protocol::DBus::Message::Header::FIELD()->{'SIGNATURE'}) {
+                $opts{'body_sig'} = $value;
             }
-
-            push @hfields, bless \@field, 'Protocol::DBus::Type::Struct';
         }
     }
 
-    $opts{'hfields'} = bless \@hfields, 'Protocol::DBus::Type::Array';
+    $opts{'hfields'} = bless \%hfields, 'Protocol::DBus::Type::Dict';
 
     if ($opts{'body'}) {
         die "“body” requires a SIGNATURE header!" if !$opts{'body_sig'};
@@ -189,7 +186,6 @@ sub _to_string {
     );
 
     Protocol::DBus::Pack::align_str($$buf_sr, 8);
-printf "after align8: %d (8 * %d)\n", length($$buf_sr), length($$buf_sr) / 8;
 
     $$buf_sr .= $$body_m_sr if $body_m_sr;
 
