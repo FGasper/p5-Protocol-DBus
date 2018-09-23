@@ -13,8 +13,8 @@ use constant {
     _MIN_HEADER_LENGTH => 16,
 
     # The spec says to parse as array of pairs, but a dict makes
-    # more sense and is compatible. (The spec doesn’t proscribe duplicate
-    # headers, but the reference implementation does.)
+    # more sense and is compatible. (The spec doesn’t proscribe
+    # duplicate headers, but the reference implementation does.)
     SIGNATURE => 'yyyyuua{yv}',
 
     MESSAGE_TYPE => {

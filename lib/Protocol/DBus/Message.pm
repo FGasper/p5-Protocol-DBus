@@ -28,7 +28,7 @@ sub parse {
             }
 
             my %self = ( _body_sig => $body_sig );
-            @self{'_type', '_flags', 'body_length', '_serial', '_hfields', '_body'} = (@{$hdr}[1, 2, 4, 5, 6], $body_data);
+            @self{'_type', '_flags', '_serial', '_hfields', '_body'} = (@{$hdr}[1, 2, 5, 6], $body_data);
 
             # Remove the unmarshaled bytes.
             substr( $$buf_sr, 0, $hdr_len + $hdr->[4], q<> );
