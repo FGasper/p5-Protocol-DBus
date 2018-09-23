@@ -17,16 +17,22 @@ sub new {
     my @missing = grep { !$opts{$_} } qw( socket  mechanism );
     die "Need: @missing" if @missing;
 
-    my $module = __PACKAGE__ . "::Mechanism::$opts{'mechanism'}";
-    Module::Load::load($module);
+    if (!ref $opts{'mechanism'}) {
+        my $module = __PACKAGE__ . "::Mechanism::$opts{'mechanism'}";
+        Module::Load::load($module);
+
+        $opts{'mechanism'} = $module->new();
+    }
 
     $opts{"_$_"} = delete $opts{$_} for keys %opts;
 
     $opts{'_io'} = IO::Framed->new( $opts{'_socket'} )->enable_write_queue();
 
-    $opts{'_mechanism_module'} = $module;
+    my $self = bless \%opts, $class;
 
-    return bless \%opts, $class;
+    $self->_create_xaction();
+
+    return $self;
 }
 
 sub negotiate_unix_fd {
@@ -42,20 +48,15 @@ sub _create_xaction {
 
     # 0 = send; 1 = receive
     my @xaction = (
-        [ 0 => 'AUTH', $self->{'_mechanism'}, $self->{'_mechanism_module'}->INITIAL_RESPONSE() ],
+        [ 0 => 'AUTH', $self->{'_mechanism'}->label(), $self->{'_mechanism'}->INITIAL_RESPONSE() ],
         $self->{'_mechanism_module'}->AFTER_AUTH(),
 
         [ 1 => \&_consume_ok ],
+
+        $self->{'_mechanism_module'}->AFTER_OK();
+
+        [ 0 => 'BEGIN' ],
     );
-
-    if ( $self->{'_negotiate_unix_fd'} ) {
-        push @xaction, (
-            [ 0 => 'NEGOTIATE_UNIX_FD' ],
-            [ 1 => \&_consume_agree_unix_fd ],
-        );
-    }
-
-    push @xaction, [ 0 => 'BEGIN' ];
 
     return \@xaction;
 }
@@ -73,27 +74,23 @@ sub _consume_ok {
     return;
 }
 
-sub _consume_agree_unix_fd {
-    my ($self, $line) = @_;
+sub pending_receive {
+    my ($self) = @_;
 
-    if ($line eq 'AGREE_UNIX_FD') {
-        $self->{'_can_pass_unix_fd'} = 1;
-    }
-    elsif (index($line, 'ERROR ') == 0) {
-        warn "Server rejected unix fd passing: " . substr($line, 6) . $/;
+    my $next_is_receive = $self->{'_xaction'}[0];
+    $next_is_receive &&= $next_is_receive->[0];
+
+    if (!defined $next_is_receive) {
+        die "Authn transaction is done!";
     }
 
-    return;
+    return $next_is_receive;
 }
 
 sub go {
     my ($self) = @_;
 
     my $s = $self->{'_socket'};
-use Data::Dumper;
-#print STDERR Dumper $self;
-
-    $self->{'_xaction'} ||= $self->_create_xaction();
 
     $self->{'_sent_initial'} ||= do {
         $self->{'_mechanism_module'}->send_initial($s);
@@ -135,6 +132,14 @@ sub _send_line {
     my ($self) = @_;
 
     my $ok = $self->{'_io'}->write( $_[1] . _CRLF() );
+    return $self->_flush_write_queue();
+}
+
+sub _flush_write_queue {
+    my ($self) = @_;
+
+    local $SIG{'PIPE'} = 'IGNORE';
+
     return $self->{'_io'}->flush_write_queue();
 }
 

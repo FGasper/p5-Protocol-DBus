@@ -5,5 +5,12 @@ use warnings;
 
 use constant INITIAL_RESPONSE => ();
 use constant AFTER_AUTH => ();
+use constant AFTER_OK => ();
+
+sub label {
+    my $class = ref($_[0]) || $_[0];
+
+    return substr( $class, 1 + rindex($class, ':') );
+}
 
 1;

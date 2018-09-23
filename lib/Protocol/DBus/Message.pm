@@ -103,15 +103,19 @@ sub new {
 
 #----------------------------------------------------------------------
 
-sub body {
+sub get_header {
+    if ($_[1] =~ tr<0-9><>c) {
+        return $_[0]->{'hfields'}{ Protocol::DBus::Message::Header::FIELD()->{$_[1]} || die("Bad header: “$_[1]”") };
+    }
+
+    return $_[0]->{'hfields'}{$_[1]};
+}
+
+sub get_body {
     return $_[0]->{'_body'};
 }
 
-sub hfields {
-    return $_[0]->{'_hfields'};
-}
-
-sub type {
+sub get_type {
     return $_[0]->{'_type'};
 }
 
@@ -123,7 +127,7 @@ sub type_is {
     });
 }
 
-sub flags {
+sub get_flags {
     return $_[0]->{'_flags'};
 }
 
@@ -157,6 +161,8 @@ sub to_string_be {
     local $_use_be = 1;
     return _to_string(@_);
 }
+
+#----------------------------------------------------------------------
 
 sub _to_string {
     my ($self) = @_;
