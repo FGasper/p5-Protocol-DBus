@@ -30,7 +30,7 @@ sub new {
 
     my $self = bless \%opts, $class;
 
-    $self->_create_xaction();
+    $self->{'_xaction'} = $self->_create_xaction();
 
     return $self;
 }
@@ -49,11 +49,11 @@ sub _create_xaction {
     # 0 = send; 1 = receive
     my @xaction = (
         [ 0 => 'AUTH', $self->{'_mechanism'}->label(), $self->{'_mechanism'}->INITIAL_RESPONSE() ],
-        $self->{'_mechanism_module'}->AFTER_AUTH(),
+        $self->{'_mechanism'}->AFTER_AUTH(),
 
         [ 1 => \&_consume_ok ],
 
-        $self->{'_mechanism_module'}->AFTER_OK();
+        $self->{'_mechanism'}->AFTER_OK(),
 
         [ 0 => 'BEGIN' ],
     );
@@ -93,7 +93,7 @@ sub go {
     my $s = $self->{'_socket'};
 
     $self->{'_sent_initial'} ||= do {
-        $self->{'_mechanism_module'}->send_initial($s);
+        $self->{'_mechanism'}->send_initial($s);
     };
 
     if ($self->{'_sent_initial'}) {

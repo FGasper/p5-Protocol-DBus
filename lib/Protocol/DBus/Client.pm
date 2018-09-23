@@ -15,7 +15,7 @@ sub system {
 
     return __PACKAGE__->new(
         socket => $socket,
-        mechanism => 'EXTERNAL',
+        authn_mechanism => 'EXTERNAL',
     );
 }
 
@@ -44,7 +44,10 @@ sub authn_pending_receive {
 
 sub get_message {
     if ( my $msg = $_[0]->SUPER::get_message() ) {
+
+        no warnings 'redefine';
         *get_message = Protocol::DBus::Peer->can('get_message');
+
         return $_[0]->get_message();
     }
 
@@ -62,7 +65,7 @@ sub do_authn {
                 destination => 'org.freedesktop.DBus',
                 member => 'Hello',
                 on_return => sub {
-                    $self->{'_connection_name'} = ${ $_[0]->get_body() };
+                    $self->{'_connection_name'} = $_[0]->get_body()->[0];
                 },
             );
         };

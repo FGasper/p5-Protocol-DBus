@@ -105,10 +105,10 @@ sub new {
 
 sub get_header {
     if ($_[1] =~ tr<0-9><>c) {
-        return $_[0]->{'hfields'}{ Protocol::DBus::Message::Header::FIELD()->{$_[1]} || die("Bad header: “$_[1]”") };
+        return $_[0]->{'_hfields'}{ Protocol::DBus::Message::Header::FIELD()->{$_[1]} || die("Bad header: “$_[1]”") };
     }
 
-    return $_[0]->{'hfields'}{$_[1]};
+    return $_[0]->{'_hfields'}{$_[1]};
 }
 
 sub get_body {

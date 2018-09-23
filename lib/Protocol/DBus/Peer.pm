@@ -22,7 +22,7 @@ sub get_message {
     my $msg = $_[0]->{'_parser'}->get_message();
 
     if (my $serial = $msg->get_header('REPLY_SERIAL')) {
-        if (my $cb = delete $self->{'_on_return'}{$serial}) {
+        if (my $cb = delete $_[0]->{'_on_return'}{$serial}) {
             $cb->($msg);
         }
     }
@@ -33,17 +33,19 @@ sub get_message {
 sub send_call {
     my ($self, %opts) = @_;
 
-    my $serial = ++$opts{'_last_sent_serial'};
+    my $cb = delete $opts{'on_return'};
 
-    if (my $cb = delete $opts{'on_return'}) {
+    my $ret = $self->_send_msg(
+        %opts,
+        type => 'METHOD_CALL',
+    );
+
+    if ($cb) {
+        my $serial = $self->{'_last_sent_serial'};
         $self->{'_on_return'}{$serial} = $cb;
     }
 
-    return $self->_send_msg(
-        %opts,
-        type => 'CALL',
-        serial => 1,
-    );
+    return $ret;
 }
 
 sub send_signal {
@@ -74,24 +76,27 @@ sub set_big_endian {
 sub _send_msg {
     my ($self, %opts) = @_;
 
-    my ($body_sr, $flags) = delete @opts{'body', 'flags'};
+    my ($type, $body_sr, $flags) = delete @opts{'type', 'body', 'flags'};
 
-    my %hargs = map {
+    my @hargs = map {
         my $k = $_;
         $k =~ tr<a-z><A-Z>;
         ( $k => $opts{$_} );
     } keys %opts;
 
+    my $serial = ++$self->{'_last_sent_serial'};
+
     my $msg = Protocol::DBus::Message->new(
-        type => $opts{'type'},
-        hfields => \%hargs,
+        type => $type,
+        hfields => \@hargs,
         flags => $flags,
         body => $body_sr,
+        serial => $serial,
     );
 
     $self->{'_endian'} ||= 'le';
 
-    $self->{'_io'}->enqueue_write( $msg->can("to_string_$self->{'_endian'}")->($msg) );
+    $self->{'_io'}->write( ${ $msg->can("to_string_$self->{'_endian'}")->($msg) } );
 
     return $self->{'_io'}->flush_write_queue();
 }
