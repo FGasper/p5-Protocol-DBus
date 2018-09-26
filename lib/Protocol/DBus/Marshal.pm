@@ -11,7 +11,7 @@ our $_ENDIAN_PACK;
 # for testing
 our $DICT_CANONICAL;
 
-# data, sig
+# data (array ref, always), sig
 sub marshal_le {
     local $_ENDIAN_PACK = '<';
     return _marshal(@_[0, 1]);
@@ -36,18 +36,16 @@ sub unmarshal_be {
 #----------------------------------------------------------------------
 
 sub _marshal {
-    my ($sig, $data, $buf_sr) = @_;
+    my ($sig, $data, $buf_sr, $_data_are_not_list) = @_;
 
     $buf_sr ||= \do { my $v = q<> };
 
     my @scts = Protocol::DBus::Signature::split($sig);
 
-    my $data_are_list = (@scts > 1);
-
     for my $si ( 0 .. $#scts ) {
         my $sct = $scts[$si];
 
-        my $datum = $data_are_list ? $data->[$si] : $data;
+        my $datum = $_data_are_not_list ? $data : $data->[$si];
 
         # Arrays
         if (index($sct, 'a') == 0) {
@@ -65,8 +63,8 @@ sub _marshal {
 
         # Variants are given as two-member arrays.
         elsif ($sct eq 'v') {
-            _marshal( g => $datum->[0], $buf_sr );
-            _marshal( $datum->[0], $datum->[1], $buf_sr );
+            _marshal( g => $datum->[0], $buf_sr, 1 );
+            _marshal( $datum->[0], $datum->[1], $buf_sr, 1 );
         }
 
         # Anything else is a basic type.
@@ -121,15 +119,15 @@ sub _marshal_array {
 
         for my $key ( $DICT_CANONICAL ? (sort keys %$data) : keys %$data ) {
             Protocol::DBus::Pack::align_str($$buf_sr, 8);
-            _marshal($key_sig, $key,$buf_sr);
-            _marshal( $value_sig, $data->{$key}, $buf_sr);
+            _marshal($key_sig, $key, $buf_sr, 1);
+            _marshal( $value_sig, $data->{$key}, $buf_sr, 1);
         }
     }
 
     # Any other array is given as an array.
     else {
         for my $item ( @$data ) {
-            _marshal($sct, $item, $buf_sr);
+            _marshal($sct, $item, $buf_sr, 1);
         }
     }
 
