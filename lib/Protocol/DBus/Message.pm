@@ -236,7 +236,7 @@ sub _to_string {
     }
 
     my $data = [
-        ord('l'),
+        ord($_use_be ? 'B' : 'l'),
         $self->{'_type'},
         $self->{'_flags'},
         _PROTOCOL_VERSION(),
@@ -253,6 +253,9 @@ sub _to_string {
     Protocol::DBus::Pack::align_str($$buf_sr, 8);
 
     $$buf_sr .= $$body_m_sr if $body_m_sr;
+use Data::Dumper;
+local $Data::Dumper::Useqq = 1;
+print STDERR Dumper $$buf_sr;
 
     return $buf_sr;
 }

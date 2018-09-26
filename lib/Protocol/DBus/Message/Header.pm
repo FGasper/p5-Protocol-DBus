@@ -69,7 +69,7 @@ sub parse_simple {
             die "Protocol version must be 1, not “$prot_version”!";
         }
 
-        $_is_big_endian = ($_is_big_endian eq 'b') ? 1 : ($_is_big_endian eq 'l') ? 0 : die "Invalid endian byte: “$_is_big_endian”!";
+        $_is_big_endian = ($_is_big_endian eq 'B') ? 1 : ($_is_big_endian eq 'l') ? 0 : die "Invalid endian byte: “$_is_big_endian”!";
 
         my $array_length = unpack(
             '@12 ' . ($_is_big_endian ? 'N' : 'V'),

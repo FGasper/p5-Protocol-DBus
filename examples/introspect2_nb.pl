@@ -20,6 +20,12 @@ my $dbus = Protocol::DBus::Client::system();
 
 use Carp::Always;
 
+$SIG{'PIPE'} = 'IGNORE';
+
+# Just for demonstration purposes. Endianness
+# should not matter.
+$dbus->big_endian(1);
+
 $dbus->blocking(0);
 
 my $fileno = $dbus->fileno();

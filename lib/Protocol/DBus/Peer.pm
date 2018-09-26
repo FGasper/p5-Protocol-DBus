@@ -140,8 +140,9 @@ sub send_call {
 =head2 I<OBJ>->big_endian()
 
 Same interface as C<blocking()>, but this sets/gets/toggles whether to send
-big-endian messages. (The default is little-endian; I’m not sure why it
-would matter.)
+big-endian messages instead of little-endian.
+
+(I’m not sure why it would matter?)
 
 =cut
 
