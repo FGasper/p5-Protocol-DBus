@@ -3,6 +3,19 @@ package Protocol::DBus::Message;
 use strict;
 use warnings;
 
+=encoding utf-8
+
+=head1 NAME
+
+Protocol::DBus::Message
+
+=head1 DESCRIPTION
+
+This class encapsulates a single DBus message. You generally should not
+instantiate it directly.
+
+=cut
+
 use Protocol::DBus::Marshal ();
 use Protocol::DBus::Message::Header ();
 
@@ -103,6 +116,14 @@ sub new {
 
 #----------------------------------------------------------------------
 
+=head1 METHODS
+
+=head2 I<OBJ>->get_header( $NAME )
+
+$NAME is, e.g., C<PATH>.
+
+=cut
+
 sub get_header {
     if ($_[1] =~ tr<0-9><>c) {
         return $_[0]->{'_hfields'}{ Protocol::DBus::Message::Header::FIELD()->{$_[1]} || die("Bad header: “$_[1]”") };
@@ -111,13 +132,32 @@ sub get_header {
     return $_[0]->{'_hfields'}{$_[1]};
 }
 
+=head2 I<OBJ>->get_body()
+
+Always returned as an array reference or undef. See below about mapping
+between D-Bus and Perl.
+
+=cut
+
 sub get_body {
     return $_[0]->{'_body'};
 }
 
+=head2 I<OBJ>->get_type()
+
+Returns a number. Cross-reference with the D-Bus specification.
+
+=cut
+
 sub get_type {
     return $_[0]->{'_type'};
 }
+
+=head2 I<OBJ>->type_is( $NAME )
+
+Convenience method; $NAME is, e.g., C<METHOD_CALL>.
+
+=cut
 
 sub type_is {
     my ($self, $name) = @_;
@@ -127,9 +167,22 @@ sub type_is {
     });
 }
 
+=head2 I<OBJ>->get_flags()
+
+Returns a number. Cross-reference with the D-Bus specification.
+
+=cut
+
 sub get_flags {
     return $_[0]->{'_flags'};
 }
+
+=head2 I<OBJ>->flags_have( @NAME )
+
+Convenience method; indicates whether all of the given @NAMES
+(e.g., C<NO_AUTO_START>) correspond to flags that are set in the message.
+
+=cut
 
 sub flags_have {
     my ($self, @names) = @_;
@@ -145,7 +198,13 @@ sub flags_have {
     return 1;
 }
 
-sub serial {
+=head2 I<OBJ>->get_serial()
+
+Returns a number.
+
+=cut
+
+sub get_serial {
     return $_[0]->{'_serial'};
 }
 
@@ -197,5 +256,23 @@ sub _to_string {
 
     return $buf_sr;
 }
+
+#----------------------------------------------------------------------
+
+=head1 MAPPING
+
+=over
+
+=item * Numeric and string types are represented as plain Perl scalars.
+
+=item * Variant signatures are B<not> preserved.
+
+=item * Containers are represented as blessed references:
+C<Protocol::DBus::Type::Dict>, C<Protocol::DBus::Type::Array>, and
+C<Protocol::DBus::Type::Struct>. Currently these are just plain hash and
+array references that are bless()ed; i.e., the classes don’t have any
+methods defined.
+
+=back
 
 1;

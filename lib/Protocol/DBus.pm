@@ -23,7 +23,7 @@ For blocking I/O:
         callback => sub { my ($msg) = @_ },
     );
 
-    my $msg = $dbus->receive();
+    my $msg = $dbus->get_message();
 
 For non-blocking I/O:
 
@@ -32,7 +32,7 @@ For non-blocking I/O:
     my $fileno = $dbus->fileno();
 
     # You can use whatever polling method you prefer;
-    # the following is quick and easy:
+    # the following is just for demonstration:
     vec( my $mask, $fileno, 1 ) = 1;
 
     while (!$dbus->do_authn()) {
@@ -44,33 +44,27 @@ For non-blocking I/O:
         }
     }
 
-    while ( my $msg = $dbus->send_receive() ) { .. }
+    $dbus->send_call( .. );     # same parameters as above
 
-XXX TODO
+    while (1) {
+        my $wout = $dbus->pending_send() || q<>;
+        $wout &&= $mask;
+
+        select( my $rout = $mask, $wout, undef, undef );
+
+        if ($wout =~ tr<\0><>c) {
+            $dbus->flush_write_queue();
+        }
+
+        if ($rout =~ tr<\0><>c) {
+
+            # It’s critical to get_message() until undef is returned.
+            1 while $dbus->get_message();
+        }
+    }
 
 =head1 DESCRIPTION
 
 This is an original, pure-Perl implementation of L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
-
-Its features include:
-
-=over
-
-=item blocking or non-blocking I/O
-
-=item 
-
-=back
-
-=head1 MAPPING
-
-The following conventions are observed:
-
-
-=head2 D-Bus -> Perl
-
-=over
-
-=item 
 
 =cut
