@@ -48,12 +48,33 @@ methods.
 
 sub system {
     my $addr = Protocol::DBus::Path::system_message_bus();
+
+    return _create_local($addr);
+}
+
+=head2 login_session()
+
+Like C<system()> but for the login session’s message bus.
+
+=cut
+
+sub login_session {
+    my $addr = Protocol::DBus::Path::login_session_message_bus() or do {
+        die "Failed to identify login system message bus!";
+    };
+
+    return _create_local($addr);
+}
+
+sub _create_local {
+    my ($addr) = @_;
     my $socket = Protocol::DBus::Connect::create_socket($addr);
 
     return __PACKAGE__->new(
         socket => $socket,
         authn_mechanism => 'EXTERNAL',
     );
+}
 }
 
 #----------------------------------------------------------------------

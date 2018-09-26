@@ -15,12 +15,13 @@ For blocking I/O:
     $dbus->do_authn();
 
     $dbus->send_call(
-        method => 'org.freedesktop.DBus.Properties.GetAll',
-        signature => 's',
         path => '/org/freedesktop/DBus',
+        interface => 'org.freedesktop.DBus.Properties',
+        member => 'GetAll',
         destination => 'org.freedesktop.DBus',
-        body => 'org.freedesktop.DBus',
-        callback => sub { my ($msg) = @_ },
+        signature => 's',
+        body => \'org.freedesktop.DBus',
+        on_return => sub { my ($msg) = @_ },
     );
 
     my $msg = $dbus->get_message();
@@ -66,5 +67,7 @@ For non-blocking I/O:
 =head1 DESCRIPTION
 
 This is an original, pure-Perl implementation of L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
+
+Right now it’s not very well-tested
 
 =cut
