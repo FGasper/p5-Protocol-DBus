@@ -275,4 +275,6 @@ methods defined.
 
 =back
 
+=cut
+
 1;
