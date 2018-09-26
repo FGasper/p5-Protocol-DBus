@@ -18,7 +18,7 @@ sub _set_up_peer_io {
     return;
 }
 
-sub get_message {
+sub receive {
     my $msg = $_[0]->{'_parser'}->get_message();
 
     if (my $serial = $msg->get_header('REPLY_SERIAL')) {
@@ -28,6 +28,14 @@ sub get_message {
     }
 
     return $msg;
+}
+
+sub flush_write_queue {
+    if ($_[0]->{'_io'}->get_write_queue_count()) {
+        return $_[0]->{'_io'}->flush_write_queue();
+    }
+
+    return 1;
 }
 
 sub send_call {
@@ -57,20 +65,28 @@ sub send_signal {
     );
 }
 
-sub set_little_endian {
+sub big_endian {
     my ($self) = @_;
 
-    $self->{'_endian'} = 'le';
+    if (@_ > 0) {
+        $self->{'_big_endian'} = !!$_[1];
+    }
 
-    return $self;
+    return !!$self->{'_big_endian'};
 }
 
-sub set_big_endian {
-    my ($self) = @_;
+sub blocking {
+    my $self = shift;
 
-    $self->{'_endian'} = 'be';
+    return $_[0]->{'_socket'}->blocking(@_);
+}
 
-    return $self;
+sub fileno {
+    return fileno $_[0]->{'_socket'};
+}
+
+sub pending_send {
+    return !!$_[0]->{'_io'}->get_write_queue_count();
 }
 
 sub _send_msg {
@@ -96,7 +112,7 @@ sub _send_msg {
 
     $self->{'_endian'} ||= 'le';
 
-    $self->{'_io'}->write( ${ $msg->can("to_string_$self->{'_endian'}")->($msg) } );
+    $self->{'_io'}->write( ${ $msg->can('to_string_' . ($self->{'_big_endian'} ? 'be' : 'le'))->($msg) } );
 
     return $self->{'_io'}->flush_write_queue();
 }

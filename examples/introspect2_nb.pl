@@ -20,7 +20,24 @@ my $dbus = Protocol::DBus::Client::system();
 
 use Carp::Always;
 
-$dbus->do_authn();
+$dbus->blocking(0);
+
+my $fileno = $dbus->fileno();
+
+# You can use whatever polling method you prefer;
+# the following is quick and easy:
+vec( my $mask, $fileno, 1 ) = 1;
+
+while (!$dbus->do_authn()) {
+    if ($dbus->authn_pending_send()) {
+        select( undef, my $wout = $mask, undef, undef );
+    }
+    else {
+        select( my $rout = $mask, undef, undef, undef );
+    }
+}
+
+#----------------------------------------------------------------------
 
 my $got_response;
 
@@ -38,4 +55,10 @@ $dbus->send_call(
     },
 );
 
-$dbus->get_message() while !$got_response;
+while (!$got_response) {
+    my $win = $dbus->pending_send() || q<>;
+    $win &&= $mask;
+
+    select( my $rout = $mask, $win, undef, undef );
+    $dbus->send_receive();
+}

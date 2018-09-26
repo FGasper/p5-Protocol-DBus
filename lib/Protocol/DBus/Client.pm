@@ -29,26 +29,26 @@ sub new {
         mechanism => $opts{'authn_mechanism'},
     );
 
-    my $self = bless { _authn => $authn }, $class;
+    my $self = bless { _socket => $opts{'socket'}, _authn => $authn }, $class;
 
     $self->_set_up_peer_io( $opts{'socket'} );
 
     return $self;
 }
 
-sub authn_pending_receive {
+sub authn_pending_send {
     my ($self) = @_;
 
-    return $self->{'_authn'}->pending_receive();
+    return $self->{'_authn'}->pending_send();
 }
 
-sub get_message {
+sub receive {
     if ( my $msg = $_[0]->SUPER::get_message() ) {
 
         no warnings 'redefine';
-        *get_message = Protocol::DBus::Peer->can('get_message');
+        *receive = Protocol::DBus::Peer->can('receive');
 
-        return $_[0]->get_message();
+        return $_[0]->receive();
     }
 
     return undef;

@@ -15,9 +15,12 @@ sub create_socket {
         $path =~ s<%([0-9a-fA-F]{2})><chr hex $1>ge;
 
         socket my $s, Socket::AF_UNIX(), Socket::SOCK_STREAM(), 0 or do {
+            die "socket(AF_UNIX, SOCK_STREAM): $!";
         };
 
-        connect $s, Socket::pack_sockaddr_un($path);
+        connect $s, Socket::pack_sockaddr_un($path) or do {
+            die "connect($path): $!";
+        };
 
         return $s;
     }

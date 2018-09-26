@@ -8,13 +8,11 @@ Protocol::DBus
 
 =head1 SYNOPSIS
 
-    my $dbus = Protcol::DBus::Client->new(
-        bus => 'login_session',
-    );
+    my $dbus = Protcol::DBus::Client::system();
 
-    # By default we use blocking I/O, but non-blocking can be used, thus:
-    $dbus->blocking(0);
-    $dbus->fileno();
+For blocking I/O:
+
+    $dbus->do_authn();
 
     $dbus->send_call(
         method => 'org.freedesktop.DBus.Properties.GetAll',
@@ -27,9 +25,42 @@ Protocol::DBus
 
     my $msg = $dbus->receive();
 
+For non-blocking I/O:
+
+    $dbus->blocking(0);
+
+    my $fileno = $dbus->fileno();
+
+    # You can use whatever polling method you prefer;
+    # the following is quick and easy:
+    vec( my $mask, $fileno, 1 ) = 1;
+
+    while (!$dbus->do_authn()) {
+        if ($dbus->authn_pending_send()) {
+            select( undef, my $wout = $mask, undef, undef );
+        }
+        else {
+            select( my $rout = $mask, undef, undef, undef );
+        }
+    }
+
+    while ( my $msg = $dbus->send_receive() ) { .. }
+
+XXX TODO
+
 =head1 DESCRIPTION
 
 This is an original, pure-Perl implementation of L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
+
+Its features include:
+
+=over
+
+=item blocking or non-blocking I/O
+
+=item 
+
+=back
 
 =head1 MAPPING
 

@@ -74,7 +74,7 @@ sub _consume_ok {
     return;
 }
 
-sub pending_receive {
+sub pending_send {
     my ($self) = @_;
 
     my $next_is_receive = $self->{'_xaction'}[0];
@@ -84,7 +84,7 @@ sub pending_receive {
         die "Authn transaction is done!";
     }
 
-    return $next_is_receive;
+    return !$next_is_receive;
 }
 
 sub go {
