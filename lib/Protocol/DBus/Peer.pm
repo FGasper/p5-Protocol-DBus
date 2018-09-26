@@ -18,12 +18,14 @@ sub _set_up_peer_io {
     return;
 }
 
-sub receive {
+sub get_message {
     my $msg = $_[0]->{'_parser'}->get_message();
 
-    if (my $serial = $msg->get_header('REPLY_SERIAL')) {
-        if (my $cb = delete $_[0]->{'_on_return'}{$serial}) {
-            $cb->($msg);
+    if ($msg) {
+        if (my $serial = $msg->get_header('REPLY_SERIAL')) {
+            if (my $cb = delete $_[0]->{'_on_return'}{$serial}) {
+                $cb->($msg);
+            }
         }
     }
 
@@ -78,7 +80,7 @@ sub big_endian {
 sub blocking {
     my $self = shift;
 
-    return $_[0]->{'_socket'}->blocking(@_);
+    return $self->{'_socket'}->blocking(@_);
 }
 
 sub fileno {

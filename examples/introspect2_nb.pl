@@ -37,6 +37,8 @@ while (!$dbus->do_authn()) {
     }
 }
 
+print "done authn\n";
+
 #----------------------------------------------------------------------
 
 my $got_response;
@@ -60,5 +62,6 @@ while (!$got_response) {
     $win &&= $mask;
 
     select( my $rout = $mask, $win, undef, undef );
-    $dbus->send_receive();
+    $dbus->flush_write_queue() if $win;
+    1 while $dbus->get_message();
 }
