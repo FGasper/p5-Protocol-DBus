@@ -236,7 +236,7 @@ sub _to_string {
     if ($self->{'_body_sig'}) {
         $body_m_sr = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
             $self->{'_body_sig'},
-            ${ $self->{'_body'} },
+            $self->{'_body'},
         );
     }
 
@@ -264,19 +264,46 @@ sub _to_string {
 
 #----------------------------------------------------------------------
 
-=head1 MAPPING
+=head1 MAPPING D-BUS TO PERL
 
 =over
 
 =item * Numeric and string types are represented as plain Perl scalars.
-
-=item * Variant signatures are B<not> preserved.
 
 =item * Containers are represented as blessed references:
 C<Protocol::DBus::Type::Dict>, C<Protocol::DBus::Type::Array>, and
 C<Protocol::DBus::Type::Struct>. Currently these are just plain hash and
 array references that are bless()ed; i.e., the classes don’t have any
 methods defined.
+
+=item * Variant signatures are B<not> preserved; the values are represented
+according to the above logic.
+
+=back
+
+=head1 MAPPING PERL TO D-BUS
+
+=over
+
+=item * Use plain Perl scalars to represent all numeric and string types.
+
+=item * Use array references to represent D-Bus arrays and structs.
+Use hash references for dicts.
+
+=item * Use a two-member array reference—signature then value—to represent
+a D-Bus variant.
+
+=back
+
+=head2 Examples
+
+=over
+
+=item * C<s(s)> - C<( $s0, [ $s1 ] )>
+
+=item * C<a(s)> - C<( \@ss )>
+
+=item * C<a{ss}> - C<( \%ss )>
 
 =back
 

@@ -16,7 +16,7 @@ Protocol::DBus::Peer
         signature => 's',
         path => '/org/freedesktop/DBus',
         destination => 'org.freedesktop.DBus',
-        body => 'org.freedesktop.DBus',
+        body => [ 'org.freedesktop.DBus' ],
         callback => sub { my ($msg) = @_ },
     );
 
@@ -99,7 +99,9 @@ caveats:
 
 =over
 
-=item * C<body> must be a string reference.
+=item * C<body>, if given, must be an array reference. See
+L<Protocol::DBus::Message> for a discussion of how to map between D-Bus and
+Perl.
 
 =item * The C<on_return> callback receives the server’s METHOD_RETURN
 message as argument.
@@ -211,7 +213,7 @@ sub _set_up_peer_io {
 sub _send_msg {
     my ($self, %opts) = @_;
 
-    my ($type, $body_sr, $flags) = delete @opts{'type', 'body', 'flags'};
+    my ($type, $body_ar, $flags) = delete @opts{'type', 'body', 'flags'};
 
     my @hargs = map {
         my $k = $_;
@@ -225,7 +227,7 @@ sub _send_msg {
         type => $type,
         hfields => \@hargs,
         flags => $flags,
-        body => $body_sr,
+        body => $body_ar,
         serial => $serial,
     );
 
