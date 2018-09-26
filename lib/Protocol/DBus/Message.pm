@@ -211,6 +211,9 @@ sub get_serial {
 #----------------------------------------------------------------------
 
 our $_use_be;
+BEGIN {
+    $_use_be = 0;
+}
 
 sub to_string_le {
     return _to_string(@_);
@@ -222,6 +225,8 @@ sub to_string_be {
 }
 
 #----------------------------------------------------------------------
+
+use constant _LEADING_BYTE => map { ord } ('l', 'B');
 
 sub _to_string {
     my ($self) = @_;
@@ -236,7 +241,7 @@ sub _to_string {
     }
 
     my $data = [
-        ord($_use_be ? 'B' : 'l'),
+        (_LEADING_BYTE())[ $_use_be ],
         $self->{'_type'},
         $self->{'_flags'},
         _PROTOCOL_VERSION(),
@@ -253,9 +258,6 @@ sub _to_string {
     Protocol::DBus::Pack::align_str($$buf_sr, 8);
 
     $$buf_sr .= $$body_m_sr if $body_m_sr;
-use Data::Dumper;
-local $Data::Dumper::Useqq = 1;
-print STDERR Dumper $$buf_sr;
 
     return $buf_sr;
 }
