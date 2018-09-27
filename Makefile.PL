@@ -26,8 +26,8 @@ WriteMakefile1(
     ABSTRACT_FROM => 'lib/Protocol/DBus.pm',
     LICENSE      => 'perl',
 
-    # Bleh. Hopefully can add support for older versions.
-    # MIN_PERL_VERSION => 5.008000,
+    # Because of X::Tiny
+    MIN_PERL_VERSION => 5.010000,
 
     PREREQ_PM    => {
         'parent'    => 0,
