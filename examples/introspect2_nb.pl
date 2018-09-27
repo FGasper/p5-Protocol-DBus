@@ -55,7 +55,7 @@ $dbus->send_call(
     destination => 'org.freedesktop.DBus',
     signature => 's',
     member => 'GetAll',
-    body => \'org.freedesktop.DBus',
+    body => ['org.freedesktop.DBus'],
     on_return => sub {
         $got_response = 1;
         print "got getall response\n";
