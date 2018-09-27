@@ -39,7 +39,8 @@ use Protocol::DBus::Path;
 
 =head2 system()
 
-Creates an instance of this class connected to the system’s message bus.
+Creates an instance of this class that includes a connection to the
+system’s message bus.
 
 This does not do authentication; you’ll need to do that via the class’s
 methods.

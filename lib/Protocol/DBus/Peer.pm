@@ -7,7 +7,7 @@ use warnings;
 
 =head1 NAME
 
-Protocol::DBus::Peer
+Protocol::DBus::Peer - base class for a D-Bus peer
 
 =head1 SYNOPSIS
 
@@ -31,6 +31,12 @@ Protocol::DBus::Peer
 
     # I’m not sure why you’d want to do this, but …
     $dbus->big_endian();
+
+=head1 DESCRIPTION
+
+This class contains D-Bus logic that is useful in both client and
+server contexts. (Currently this distribution does not include a server
+implementation.)
 
 =cut
 
@@ -103,8 +109,8 @@ caveats:
 L<Protocol::DBus::Message> for a discussion of how to map between D-Bus and
 Perl.
 
-=item * The C<on_return> callback receives the server’s METHOD_RETURN
-message as argument.
+=item * The C<on_return> callback receives the server’s response
+message (NB: either METHOD_RETURN or ERROR) as argument.
 
 =back
 
