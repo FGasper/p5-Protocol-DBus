@@ -45,7 +45,6 @@ my @stringify_le = (
         out => "l\1\0\1\31\0\0\0\3\0\0\0\177\0\0\0\1\1o\0\25\0\0\0/org/freedesktop/DBus\0\0\0\2\1s\0\37\0\0\0org.freedesktop.DBus.Properties\0\3\1s\0\6\0\0\0GetAll\0\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0\0\0\0\10\1g\0\1s\0\0\24\0\0\0org.freedesktop.DBus\0",
     },
 );
-use Carp::Always;
 
 for my $t (@stringify_le) {
     local $Protocol::DBus::Marshal::DICT_CANONICAL = 1;
