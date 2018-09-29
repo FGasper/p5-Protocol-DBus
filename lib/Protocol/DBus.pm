@@ -73,8 +73,13 @@ This is an original, pure-Perl implementation of client logic for
 L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
 
 Right now this distribution is an experimental effort. If you use it in your
-project, be sure to check the changelog before deploying a new version.
+project, be sure to check the changelog before deploying a new version. Please
+file bug reports as appropriate.
 
 See L<Protocol::DBus::Client> and the above sample for a starting point.
+
+=head1 EXAMPLES
+
+See the distribution’s F<examples/> directory.
 
 =cut
