@@ -3,7 +3,7 @@ package Protocol::DBus;
 use strict;
 use warnings;
 
-our $VERSION = 0.01;
+our $VERSION = '0.01-TRIAL1';
 
 =head1 NAME
 
