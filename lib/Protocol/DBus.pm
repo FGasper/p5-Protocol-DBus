@@ -7,7 +7,7 @@ our $VERSION = '0.01-TRIAL1';
 
 =head1 NAME
 
-Protocol::DBus
+Protocol::DBus - D-Bus in pure Perl
 
 =head1 SYNOPSIS
 
