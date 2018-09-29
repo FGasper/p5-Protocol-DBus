@@ -1,10 +1,11 @@
 .gitignore
 .travis.yml
+Changes
 LICENSE
+MANIFEST
 Makefile.PL
 examples/introspect.pl
-examples/introspect2.pl
-examples/introspect2_nb.pl
+examples/introspect_nb.pl
 lib/Protocol/DBus.pm
 lib/Protocol/DBus/.Connection.pm.swp
 lib/Protocol/DBus/Authn.pm
