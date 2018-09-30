@@ -3,6 +3,8 @@ package Protocol::DBus;
 use strict;
 use warnings;
 
+=encoding utf8
+
 our $VERSION = '0.01-TRIAL1';
 
 =head1 NAME
