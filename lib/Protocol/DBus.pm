@@ -5,6 +5,8 @@ use warnings;
 
 our $VERSION = '0.01-TRIAL2';
 
+=encoding utf8
+
 =head1 NAME
 
 Protocol::DBus - D-Bus in pure Perl
