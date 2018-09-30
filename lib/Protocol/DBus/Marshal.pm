@@ -6,6 +6,8 @@ use warnings;
 use Protocol::DBus::Pack ();
 use Protocol::DBus::Signature ();
 
+use constant CAN_64 => eval { !!pack 'q' };
+
 our $_ENDIAN_PACK;
 
 # for testing
@@ -77,10 +79,7 @@ sub _marshal {
 
             Protocol::DBus::Pack::align_str($$buf_sr, Protocol::DBus::Pack::ALIGNMENT()->{$sct});
 
-            my $pack = Protocol::DBus::Pack::NUMERIC()->{$sct};
-            $pack ||= Protocol::DBus::Pack::STRING()->{$sct} or do {
-                die "Unrecognized basic type: “$sct”";
-            };
+            my ($pack) = _get_pack_template($sct);
 
             $pack = "($pack)$_ENDIAN_PACK";
             $$buf_sr .= pack( $pack, $datum );
@@ -267,6 +266,15 @@ sub _get_pack_template {
         $pack_tmpl = Protocol::DBus::Pack::NUMERIC()->{$sct_sig} or do {
             die "No basic type template for type “$sct_sig”!";
         };
+
+        if (!CAN_64) {
+            if ($pack_tmpl eq 'q') {
+                $pack_tmpl = ( $_ENDIAN_PACK eq '>' ) ? 'x4 l' : 'l x4';
+            }
+            elsif ($pack_tmpl eq 'Q') {
+                $pack_tmpl = ( $_ENDIAN_PACK eq '>' ) ? 'x4 L' : 'L x4';
+            }
+        }
     }
 
     return ($pack_tmpl, $is_string);
