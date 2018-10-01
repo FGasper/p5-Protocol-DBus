@@ -6,8 +6,6 @@ use warnings;
 use Protocol::DBus::Pack ();
 use Protocol::DBus::Signature ();
 
-use constant CAN_64 => eval { !!pack 'q' };
-
 our $_ENDIAN_PACK;
 
 # for testing
@@ -267,7 +265,7 @@ sub _get_pack_template {
             die "No basic type template for type “$sct_sig”!";
         };
 
-        if (!CAN_64) {
+        if (!Protocol::DBus::Pack::CAN_64()) {
             if ($pack_tmpl eq 'q') {
                 $pack_tmpl = ( $_ENDIAN_PACK eq '>' ) ? 'x4 l' : 'l x4';
             }
