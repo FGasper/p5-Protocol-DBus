@@ -1,10 +1,15 @@
 package Protocol::DBus;
 
-our $VERSION = 0.01;
+use strict;
+use warnings;
+
+our $VERSION = '0.01';
+
+=encoding utf8
 
 =head1 NAME
 
-Protocol::DBus
+Protocol::DBus - D-Bus in pure Perl
 
 =head1 SYNOPSIS
 
@@ -20,7 +25,7 @@ For blocking I/O:
         member => 'GetAll',
         destination => 'org.freedesktop.DBus',
         signature => 's',
-        body => \'org.freedesktop.DBus',
+        body => [ 'org.freedesktop.DBus' ],
         on_return => sub { my ($msg) = @_ },
     );
 
@@ -66,8 +71,17 @@ For non-blocking I/O:
 
 =head1 DESCRIPTION
 
-This is an original, pure-Perl implementation of L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
+This is an original, pure-Perl implementation of client logic for
+L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
 
-Right now it’s not very well-tested
+Right now this distribution is an experimental effort. If you use it in your
+project, be sure to check the changelog before deploying a new version. Please
+file bug reports as appropriate.
+
+See L<Protocol::DBus::Client> and the above sample for a starting point.
+
+=head1 EXAMPLES
+
+See the distribution’s F<examples/> directory.
 
 =cut

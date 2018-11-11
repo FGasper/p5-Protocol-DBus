@@ -3,6 +3,8 @@ package Protocol::DBus::Pack;
 use strict;
 use warnings;
 
+use constant CAN_64 => eval { !!pack 'q' };
+
 use constant NUMERIC => {
     y => 'C',   # uint8
     b => 'L',   # boolean (uint32)
@@ -23,7 +25,9 @@ use constant STRING => {
 };
 
 use constant WIDTH => {
-    (map { $_ => length pack NUMERIC()->{$_} } keys %{ NUMERIC() }),
+
+    # Accommodate 32-bit Perls:
+    (map { $_ => ($_ eq 'x' || $_ eq 't') ? 8 : length pack NUMERIC()->{$_} } keys %{ NUMERIC() }),
     (map { $_ => length pack STRING()->{$_} } keys %{ STRING() }),
 };
 
