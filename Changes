@@ -1,4 +1,7 @@
 Revision history for Perl module Protocol::DBus
 
+0.02 Sun 11 Nov 2018
+- Fix some examples, remove broken example script
+
 0.01 Tue 2 Oct 2018
 - Initial release
