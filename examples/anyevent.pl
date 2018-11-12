@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #----------------------------------------
-# Contributed by Erik Huelsmann
+# Contributed by Erik Huelsmann (ehuels@gmail.com)
 #----------------------------------------
 
 use strict;
@@ -82,7 +82,7 @@ $dbus->send_call(
     path => $trans_path,
     destination => 'org.freedesktop.PackageKit',
     interface => 'org.freedesktop.PackageKit.Transaction',
-    body => [ 3 ],
+    body => [ 4 ],
 );
 
 $waiter->recv;

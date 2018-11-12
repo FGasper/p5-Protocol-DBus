@@ -1,5 +1,9 @@
 #!/usr/bin/env perl
 
+#----------------------------------------
+# Contributed by Erik Huelsmann (ehuels@gmail.com)
+#----------------------------------------
+
 use strict;
 use warnings;
 
@@ -43,7 +47,7 @@ $dbus->send_call(
     path => $trans_path,
     destination => 'org.freedesktop.PackageKit',
     interface => 'org.freedesktop.PackageKit.Transaction',
-    body => [ 2 ],
+    body => [ 4 ],
 );
 
 while (1) {
