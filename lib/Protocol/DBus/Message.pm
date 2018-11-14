@@ -22,7 +22,7 @@ use Protocol::DBus::Message::Header ();
 use constant _PROTOCOL_VERSION => 1;
 
 sub parse {
-    my ($class, $buf_sr) = @_;
+    my ($class, $buf_sr, $filehandles_ar) = @_;
 
     if ( my ($hdr, $hdr_len, $is_be) = Protocol::DBus::Message::Header::parse_simple($buf_sr) ) {
 
@@ -37,6 +37,8 @@ sub parse {
             my $body_data;
 
             if ($body_sig) {
+                local $Protocol::DBus::Marshal::FILEHANDLES = $filehandles_ar;
+
                 ($body_data) = Protocol::DBus::Marshal->can( $is_be ? 'unmarshal_be' : 'unmarshal_le' )->($buf_sr, $hdr_len, $body_sig);
             }
 
@@ -120,7 +122,8 @@ sub new {
 
 =head2 I<OBJ>->get_header( $NAME )
 
-$NAME is, e.g., C<PATH>.
+$NAME is, e.g., C<PATH> or the value of the corresponding
+member of C<Protocol::DBus::Message::Header::FIELD()>.
 
 =cut
 
@@ -208,6 +211,17 @@ sub get_serial {
     return $_[0]->{'_serial'};
 }
 
+=head2 I<OBJ>->get_filehandle( $INDEX )
+
+Returns a filehandle, or undef if $INDEX does not
+represent a filehandle that is part of the message.
+
+=cut
+
+sub get_filehandle {
+    return $_[0]->{'_filehandles'}[ $_[1] ];
+}
+
 #----------------------------------------------------------------------
 
 our $_use_be;
@@ -231,13 +245,24 @@ use constant _LEADING_BYTE => map { ord } ('l', 'B');
 sub _to_string {
     my ($self) = @_;
 
-    my $body_m_sr;
+    my ($body_m_sr, $fds_ar);
 
     if ($self->{'_body_sig'}) {
-        $body_m_sr = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
+        ($body_m_sr, $fds_ar) = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
             $self->{'_body_sig'},
             $self->{'_body'},
         );
+    }
+
+    my $hfields_hr;
+    if ($fds_ar && @$fds_ar) {
+        $hfields_hr = {
+            %{ $self->{'_hfields'} },
+            Protocol::DBus::Message::Header::FIELD()->{'UNIX_FDS'} => [
+                Protocol::DBus::Message::Header::FIELD_SIGNATURE()->{'UNIX_FDS'},
+                0 + @$fds_ar,
+            ],
+        };
     }
 
     my $data = [
@@ -247,10 +272,10 @@ sub _to_string {
         _PROTOCOL_VERSION(),
         $body_m_sr ? length( $$body_m_sr ) : 0,
         $self->{'_serial'},
-        $self->{'_hfields'},
+        $hfields_hr || $self->{'_hfields'},
     ];
 
-    my $buf_sr = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
+    my ($buf_sr) = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
         Protocol::DBus::Message::Header::SIGNATURE(),
         $data,
     );
@@ -259,7 +284,7 @@ sub _to_string {
 
     $$buf_sr .= $$body_m_sr if $body_m_sr;
 
-    return $buf_sr;
+    return( $buf_sr, $fds_ar );
 }
 
 #----------------------------------------------------------------------

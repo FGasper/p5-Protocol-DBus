@@ -135,14 +135,14 @@ sub send_call {
     return $ret;
 }
 
-#sub send_signal {
-#    my ($self, %opts) = @_;
-#
-#    return $self->_send_msg(
-#        %opts,
-#        type => 'SIGNAL',
-#    );
-#}
+sub send_signal {
+    my ($self, %opts) = @_;
+
+    return $self->_send_msg(
+        %opts,
+        type => 'SIGNAL',
+    );
+}
 
 #----------------------------------------------------------------------
 
@@ -161,6 +161,9 @@ sub big_endian {
     if (@_ > 0) {
         my $old = $self->{'_big_endian'};
         $self->{'_big_endian'} = !!$_[1];
+
+        $self->{'_to_str_fn'} = 'to_string_' . ($_[1] ? 'be' : 'le');
+
         return $self->{'_big_endian'};
     }
 
@@ -239,10 +242,33 @@ sub _send_msg {
     );
 
     $self->{'_endian'} ||= 'le';
+    $self->{'_to_str_fn'} ||= "to_string_$self->{'_endian'}";
 
-    $self->{'_io'}->write( ${ $msg->can('to_string_' . ($self->{'_big_endian'} ? 'be' : 'le'))->($msg) } );
+    my ($buf_sr, $fds_ar) = $msg->can($self->{'_to_str_fn'})->($msg);
 
-    return $self->{'_io'}->flush_write_queue();
+    use Socket::MsgHdr;
+
+    my $smsg = Socket::MsgHdr->new(
+        buf => $$buf_sr,
+    );
+
+    if ($fds_ar && @$fds_ar) {
+        $smsg->cmsghdr(
+            Socket::SOL_SOCKET(), Socket::SCM_RIGHTS(),
+            pack "I!", @$fds_ar,
+        );
+    }
+
+    my $s = Socket::MsgHdr::sendmsg( $self->{'_socket'}, $smsg );
+
+    # TODO: yes
+    if ($s < $smsg->buflen()) {
+        die "incomplete send!";
+    }
+
+    #$self->{'_io'}->write(  );
+
+    #return $self->{'_io'}->flush_write_queue();
 }
 
 1;

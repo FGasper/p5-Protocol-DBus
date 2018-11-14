@@ -8,13 +8,20 @@ use Protocol::DBus::Signature ();
 
 our $_ENDIAN_PACK;
 
+# Set this to get actual Perl filehandles in the
+# message body.
+our $FILEHANDLES;
+
 # for testing
 our $DICT_CANONICAL;
 
-# data (array ref, always), sig
+our @_MARSHAL_FDS;
+
+# sig, data (array ref)
 sub marshal_le {
     local $_ENDIAN_PACK = '<';
-    return _marshal(@_[0, 1]);
+    local @_MARSHAL_FDS;
+    return( _marshal(@_[0, 1]), \@_MARSHAL_FDS );
 }
 
 # buf, buf offset, sig
@@ -25,7 +32,8 @@ sub unmarshal_le {
 
 sub marshal_be {
     local $_ENDIAN_PACK = '>';
-    return _marshal(@_[0, 1]);
+    local @_MARSHAL_FDS;
+    return( _marshal(@_[0, 1]), @_MARSHAL_FDS );
 }
 
 sub unmarshal_be {
@@ -73,6 +81,19 @@ sub _marshal {
                 $datum =~ m<\A/(?:[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*)?\z> or do {
                     die "Invalid object path: “$datum”";
                 };
+            }
+            elsif ($sct eq 'h') {
+                my $fd = fileno($datum);
+                die "fileno($datum) returned undef!" if !defined $fd;
+
+                my ($idx) = grep { $_MARSHAL_FDS[$_] == $fd } 0 .. $#_MARSHAL_FDS;
+
+                if (!defined $idx) {
+                    $idx = @_MARSHAL_FDS;
+                    push @_MARSHAL_FDS, $fd;
+                }
+
+                $datum = $idx;
             }
 
             Protocol::DBus::Pack::align_str($$buf_sr, Protocol::DBus::Pack::ALIGNMENT()->{$sct});
@@ -238,6 +259,10 @@ sub _unmarshal_sct {
     Protocol::DBus::Pack::align($buf_offset, Protocol::DBus::Pack::ALIGNMENT()->{$sct_sig});
 
     my $val = unpack("\@$buf_offset ($pack_tmpl)$_ENDIAN_PACK", $$buf_sr);
+
+    if ($FILEHANDLES && $sct_sig eq 'h') {
+        $val = $FILEHANDLES->[$val] || $val;
+    }
 
     return ($val, $buf_offset - $buf_start + Protocol::DBus::Pack::WIDTH()->{$sct_sig} + ($is_string ? length($val) : 0));
 }
