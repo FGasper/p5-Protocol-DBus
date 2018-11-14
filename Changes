@@ -1,5 +1,8 @@
 Revision history for Perl module Protocol::DBus
 
+0.05 
+- Add proper UNIX_FD support.
+
 0.04 Wed 14 Nov 2018
 - Fix DICT unmarshaling alignment.
 - Add receive.pl example and two contributed ones.
