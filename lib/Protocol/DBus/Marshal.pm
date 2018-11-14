@@ -9,7 +9,7 @@ use Protocol::DBus::Signature ();
 our $_ENDIAN_PACK;
 
 # Set this to get actual Perl filehandles in the
-# message body.
+# message body. XXX FIXME This is a very hacky way to do it!
 our $FILEHANDLES;
 
 # for testing

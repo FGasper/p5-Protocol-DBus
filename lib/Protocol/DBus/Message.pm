@@ -243,16 +243,10 @@ sub _to_string {
         );
     }
 
-    my $hfields_hr;
-    if ($fds_ar && @$fds_ar) {
-        $hfields_hr = {
-            %{ $self->{'_hfields'} },
-            Protocol::DBus::Message::Header::FIELD()->{'UNIX_FDS'} => [
-                Protocol::DBus::Message::Header::FIELD_SIGNATURE()->{'UNIX_FDS'},
-                0 + @$fds_ar,
-            ],
-        };
-    }
+    local $self->{'_hfields'}{ Protocol::DBus::Message::Header::FIELD()->{'UNIX_FDS'} } = [
+        Protocol::DBus::Message::Header::FIELD_SIGNATURE()->{'UNIX_FDS'},
+        0 + @$fds_ar,
+    ] if $fds_ar && @$fds_ar;
 
     my $data = [
         (_LEADING_BYTE())[ $_use_be ],
@@ -261,7 +255,7 @@ sub _to_string {
         _PROTOCOL_VERSION(),
         $body_m_sr ? length( $$body_m_sr ) : 0,
         $self->{'_serial'},
-        $hfields_hr || $self->{'_hfields'},
+        $self->{'_hfields'},
     ];
 
     my ($buf_sr) = Protocol::DBus::Marshal->can( $_use_be ? 'marshal_be' : 'marshal_le' )->(
