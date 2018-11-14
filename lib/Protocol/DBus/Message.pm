@@ -211,17 +211,6 @@ sub get_serial {
     return $_[0]->{'_serial'};
 }
 
-=head2 I<OBJ>->get_filehandle( $INDEX )
-
-Returns a filehandle, or undef if $INDEX does not
-represent a filehandle that is part of the message.
-
-=cut
-
-sub get_filehandle {
-    return $_[0]->{'_filehandles'}[ $_[1] ];
-}
-
 #----------------------------------------------------------------------
 
 our $_use_be;
@@ -295,6 +284,8 @@ sub _to_string {
 
 =item * Numeric and string types are represented as plain Perl scalars.
 
+=item * UNIX_FDs are represented as Perl filehandle objects.
+
 =item * Containers are represented as blessed references:
 C<Protocol::DBus::Type::Dict>, C<Protocol::DBus::Type::Array>, and
 C<Protocol::DBus::Type::Struct>. Currently these are just plain hash and
@@ -302,7 +293,9 @@ array references that are bless()ed; i.e., the classes don’t have any
 methods defined.
 
 =item * Variant signatures are B<not> preserved; the values are represented
-according to the above logic.
+according to the above logic. The module author considers variant signatures
+not to be useful in a Perl context; if a case arises where it is desirable to
+preserve them, that mode of operation can be added later.
 
 =back
 
@@ -312,11 +305,13 @@ according to the above logic.
 
 =item * Use plain Perl scalars to represent all numeric and string types.
 
+=item * Use plain Perl filehandle objects to represent UNIX_FDs.
+
 =item * Use array references to represent D-Bus arrays and structs.
 Use hash references for dicts.
 
 =item * Use a two-member array reference—signature then value—to represent
-a D-Bus variant.
+a D-Bus variant. (Note the inconsistency with the reverse mapping.)
 
 =back
 
