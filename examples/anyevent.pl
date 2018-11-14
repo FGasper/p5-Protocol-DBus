@@ -44,7 +44,6 @@ $waiter = AnyEvent->condvar;
 
 $dbus->send_call(
     member => 'CreateTransaction',
-    signature => '',
     path => '/org/freedesktop/PackageKit',
     destination => 'org.freedesktop.PackageKit',
     interface => 'org.freedesktop.PackageKit',
