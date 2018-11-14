@@ -31,29 +31,9 @@ $dbus->send_call(
     ]
 );
 
-my $recv_name;
+$dbus->get_message();
 
-while (1) {
-    my $msg = $dbus->get_message();
-
-    if ($msg->get_header('MEMBER') eq 'NameAcquired') {
-        ($recv_name) = @{ $msg->get_body() };
-        last;
-    }
-}
-
-#print "Receive PID $$, name: $recv_name\n";
-
-$dbus->send_call(
-    member => 'AddMatch',
-    signature => 's',
-    destination => 'org.freedesktop.DBus',
-    interface => 'org.freedesktop.DBus',
-    path => '/org/freedesktop/DBus',
-    body => [
-       "type='signal'",
-    ]
-);
+my $recv_name = $dbus->get_connection_name();
 
 my $pid = fork or do {
     my $dbus = Protocol::DBus::Client::system();
