@@ -76,8 +76,10 @@ L<the D-Bus protocol|https://dbus.freedesktop.org/doc/dbus-specification.html>.
 
 It’s not much more than an implementation of the wire protocol; it doesn’t
 know about objects, services, or anything else besides the actual messages.
-That said, it would not be difficult to implement convenience logic—e.g.,
-to mimic interfaces like L<Net::DBus>—on top of what is here now.
+That said, what’s here already should allow implementation of anything you
+can do with D-Bus; moreover, it would not be difficult to implement
+convenience logic—e.g., to mimic interfaces like L<Net::DBus>—on top of
+what is here now.
 
 Right now this distribution is an experimental effort. If you use it in your
 project, be sure to check the changelog before deploying a new version. Please
@@ -97,6 +99,18 @@ See the distribution’s F<examples/> directory.
 
 =item * UNIX FD support is “transparent”: send and receive Perl filehandles
 as part of message bodies. :)
+
+=back
+
+=head1 TODO
+
+=over
+
+=item * Add conveniences like match rule logic.
+
+=item * Add DBUS_COOKIE_SHA1 authentication.
+
+=item * Add more tests.
 
 =back
 
