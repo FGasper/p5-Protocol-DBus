@@ -4,6 +4,7 @@ Changes
 LICENSE
 MANIFEST
 Makefile.PL
+README.md
 examples/anyevent.pl
 examples/introspect.pl
 examples/introspect_nb.pl

@@ -279,13 +279,14 @@ sub _to_string {
 =item * Numeric and string types are represented as plain Perl scalars.
 
 =item * UNIX_FDs are normally represented as Perl filehandle objects.
-If a UNIX_FD is received that doesn’t correspond to a received file
-descriptor, the value is represented as the number passed in the D-Bus
-message, and a warning is thrown.
+If Protocol::DBus receives a UNIX_FD that doesn’t correspond to a received
+file descriptor, the UNIX_FD will be represented as the number passed in
+the raw D-Bus message, and a warning is thrown.
 
 =item * By default, variant signatures are discarded, and the values are
 given by themselves. See L<Protocol::DBus::Peer>’s
-C<preserve_variant_signatures()> if you need the signatures.
+C<preserve_variant_signatures()> if you need an alternative mapping
+method that preserves the signatures.
 
 =item * Other containers are represented as blessed references:
 C<Protocol::DBus::Type::Dict>, C<Protocol::DBus::Type::Array>, and
