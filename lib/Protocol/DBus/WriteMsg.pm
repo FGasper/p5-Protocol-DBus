@@ -34,7 +34,7 @@ sub DESTROY {
 sub enqueue_message {
     my ($self, $buf_sr, $fds_ar) = @_;
 
-    push @{ $self->{'_message_fds'} }, $fds_ar;
+    push @{ $self->{'_message_fds'} }, ($fds_ar && @$fds_ar) ? $fds_ar : undef;
 
     $self->write(
         $$buf_sr,
@@ -49,14 +49,16 @@ sub enqueue_message {
 # Receives ($fh, $buf)
 sub WRITE {
     if (my $fds_ar = $fh_obj{ $_[0] }{'_message_fds'}[0]) {
-        my $msg = Socket::MsgHdr->new( buf => $_[0] );
+        my $msg = Socket::MsgHdr->new( buf => $_[1] );
 
         $msg->cmsghdr(
             Socket::SOL_SOCKET(), Socket::SCM_RIGHTS(),
             pack( 'I!*', @$fds_ar ),
         );
 
-        if ( my $bytes = Socket::MsgHdr::sendmsg( $_[0], $msg ) ) {
+        my $bytes = Socket::MsgHdr::sendmsg( $_[0], $msg );
+
+        if ($bytes) {
             undef $fh_obj{ $_[0] }{'_message_fds'}[0];
         }
 

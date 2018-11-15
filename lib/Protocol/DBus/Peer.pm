@@ -42,7 +42,6 @@ implementation.)
 =cut
 
 use Call::Context;
-use IO::Framed::Write;
 
 use Protocol::DBus::Message;
 use Protocol::DBus::Parser;
@@ -233,7 +232,7 @@ sub pending_send {
 sub _set_up_peer_io {
     my ($self, $socket) = @_;
 
-    $self->{'_io'} = IO::Framed::Write->new( $socket )->enable_write_queue();
+    $self->{'_io'} = Protocol::DBus::WriteMsg->new( $socket )->enable_write_queue();
     $self->{'_parser'} = Protocol::DBus::Parser->new( $socket );
 
     return;
