@@ -178,9 +178,7 @@ Same interface as C<blocking()>, but when this is enabled
 variants are given as two-member array references ([ signature => value ]),
 blessed as C<Protocol::DBus::Type::Variant> instances.
 
-For most Perl applications this is probably not necessary, but if you
-want your messages to round-trip more easily, your life will be easier if
-you enable this option.
+For most Perl applications this is probably counterproductive.
 
 =cut
 

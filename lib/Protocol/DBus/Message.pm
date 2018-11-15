@@ -286,10 +286,10 @@ C<Protocol::DBus::Type::Struct>. Currently these are just plain hash and
 array references that are bless()ed; i.e., the classes don’t have any
 methods defined.
 
-=item * Variant signatures are B<not> preserved; the values are represented
-according to the above logic. The module author considers variant signatures
-not to be useful in a Perl context; if a case arises where it is desirable to
-preserve them, that mode of operation can be added later.
+=item * By default, variants are represented by just their values. (The
+signatures are discarded.) See L<Protocol::DBus::Peer>'s
+C<preserve_variant_signatures()> mode for an alternative that can be
+useful in certain contexts.
 
 =back
 
