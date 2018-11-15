@@ -96,4 +96,6 @@ as part of message bodies. :)
 
 # SEE ALSO
 
-[Net::DBus](https://metacpan.org/pod/Net::DBus) uses libdbus as its backend.
+[Net::DBus](https://metacpan.org/pod/Net::DBus) uses libdbus (via XS) as its backend. It’s more mature and
+more idiomatic as to how a D-Bus application is normally written, but
+it’s also heavier, and it doesn’t appear to support passing filehandles.

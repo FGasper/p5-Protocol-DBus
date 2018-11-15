@@ -116,6 +116,8 @@ as part of message bodies. :)
 
 =head1 SEE ALSO
 
-L<Net::DBus> uses libdbus as its backend.
+L<Net::DBus> uses libdbus (via XS) as its backend. It’s more mature and
+more idiomatic as to how a D-Bus application is normally written, but
+it’s also heavier, and it doesn’t appear to support passing filehandles.
 
 =cut
