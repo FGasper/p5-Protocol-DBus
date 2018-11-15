@@ -48,6 +48,8 @@ sub enqueue_message {
 
 # Receives ($fh, $buf)
 sub WRITE {
+
+    # Only use sendmsg if we actually need to.
     if (my $fds_ar = $fh_obj{ $_[0] }{'_message_fds'}[0]) {
         my $msg = Socket::MsgHdr->new( buf => $_[1] );
 
