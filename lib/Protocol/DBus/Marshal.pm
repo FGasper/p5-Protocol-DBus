@@ -12,8 +12,7 @@ our $_ENDIAN_PACK;
 # message body. XXX FIXME This is a very hacky way to do it!
 our $FILEHANDLES;
 
-# Enable this to return variants as just the data, not
-# Protocol::DBus::Type::Variant instances.
+# XXX FIXME Hackety-hack …
 our $PRESERVE_VARIANT_SIGNATURES;
 
 # for testing
@@ -37,7 +36,7 @@ sub unmarshal_le {
 sub marshal_be {
     local $_ENDIAN_PACK = '>';
     local @_MARSHAL_FDS;
-    return( _marshal(@_[0, 1]), @_MARSHAL_FDS );
+    return( _marshal(@_[0, 1]), \@_MARSHAL_FDS );
 }
 
 sub unmarshal_be {
@@ -265,7 +264,10 @@ sub _unmarshal_sct {
     my $val = unpack("\@$buf_offset ($pack_tmpl)$_ENDIAN_PACK", $$buf_sr);
 
     if ($FILEHANDLES && $sct_sig eq 'h') {
-        $val = $FILEHANDLES->[$val] || $val;
+        $val = $FILEHANDLES->[$val] || do {
+            warn "UNIX_FD ($val) received that doesn’t refer to a received file descriptor!\n";
+            $val;
+        };
     }
 
     return ($val, $buf_offset - $buf_start + Protocol::DBus::Pack::WIDTH()->{$sct_sig} + ($is_string ? length($val) : 0));

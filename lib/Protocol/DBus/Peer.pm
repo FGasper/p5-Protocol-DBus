@@ -46,6 +46,7 @@ use IO::Framed::Write;
 
 use Protocol::DBus::Message;
 use Protocol::DBus::Parser;
+use Protocol::DBus::WriteMsg;
 
 #----------------------------------------------------------------------
 
@@ -264,29 +265,9 @@ sub _send_msg {
 
     my ($buf_sr, $fds_ar) = $msg->can($self->{'_to_str_fn'})->($msg);
 
-    use Socket::MsgHdr;
+    $self->{'_io'}->enqueue_message( $buf_sr, $fds_ar );
 
-    my $smsg = Socket::MsgHdr->new(
-        buf => $$buf_sr,
-    );
-
-    if ($fds_ar && @$fds_ar) {
-        $smsg->cmsghdr(
-            Socket::SOL_SOCKET(), Socket::SCM_RIGHTS(),
-            pack "I!", @$fds_ar,
-        );
-    }
-
-    my $s = Socket::MsgHdr::sendmsg( $self->{'_socket'}, $smsg );
-
-    # TODO: yes
-    if ($s < $smsg->buflen()) {
-        die "incomplete send!";
-    }
-
-    #$self->{'_io'}->write(  );
-
-    #return $self->{'_io'}->flush_write_queue();
+    return $self->{'_io'}->flush_write_queue();
 }
 
 1;

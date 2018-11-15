@@ -278,18 +278,20 @@ sub _to_string {
 
 =item * Numeric and string types are represented as plain Perl scalars.
 
-=item * UNIX_FDs are represented as Perl filehandle objects.
+=item * UNIX_FDs are normally represented as Perl filehandle objects.
+If a UNIX_FD is received that doesn’t correspond to a received file
+descriptor, the value is represented as the number passed in the D-Bus
+message, and a warning is thrown.
 
-=item * Containers are represented as blessed references:
+=item * By default, variant signatures are discarded, and the values are
+given by themselves. See L<Protocol::DBus::Peer>’s
+C<preserve_variant_signatures()> if you need the signatures.
+
+=item * Other containers are represented as blessed references:
 C<Protocol::DBus::Type::Dict>, C<Protocol::DBus::Type::Array>, and
 C<Protocol::DBus::Type::Struct>. Currently these are just plain hash and
-array references that are bless()ed; i.e., the classes don’t have any
-methods defined.
-
-=item * By default, variants are represented by just their values. (The
-signatures are discarded.) See L<Protocol::DBus::Peer>'s
-C<preserve_variant_signatures()> mode for an alternative that can be
-useful in certain contexts.
+array references that are bless()ed; i.e., the classes themselves have no
+methods defined (and aren’t even defined Perl namespaces).
 
 =back
 
