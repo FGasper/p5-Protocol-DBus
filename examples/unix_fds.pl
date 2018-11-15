@@ -18,6 +18,8 @@ use Protocol::DBus::Client;
 
 my $dbus = Protocol::DBus::Client::system();
 
+# $dbus->big_endian(1);
+
 $dbus->do_authn();
 
 $dbus->send_call(
@@ -40,7 +42,7 @@ my $pid = fork or do {
 
     $dbus->do_authn();
 
-    pipe my ($r, $w);
+    pipe( my $r, my $w );
 
     $dbus->send_signal(
         member => 'AddMatch',  # hey, it works
