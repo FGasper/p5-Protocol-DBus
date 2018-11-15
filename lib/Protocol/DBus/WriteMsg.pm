@@ -39,6 +39,8 @@ sub enqueue_message {
     $self->write(
         $$buf_sr,
         sub {
+
+            # We’re done with the message, so we remove the FDs.
             shift @{ $self->{'_message_fds'} };
         },
     );
@@ -58,6 +60,10 @@ sub WRITE {
 
         my $bytes = Socket::MsgHdr::sendmsg( $_[0], $msg );
 
+        # NOTE: This assumes that, on an incomplete write, the ancillary
+        # data (i.e., the FDs) will have been sent, and there is no need
+        # to resend. That appears to be the case on Linux and MacOS, but
+        # I can’t find any actual documentation to that effect. <shrug>
         if ($bytes) {
             undef $fh_obj{ $_[0] }{'_message_fds'}[0];
         }
