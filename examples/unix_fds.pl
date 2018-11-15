@@ -40,7 +40,7 @@ my $pid = fork or do {
 
     $dbus->do_authn();
 
-    pipe my $r, my $w;
+    pipe my ($r, $w);
 
     $dbus->send_signal(
         member => 'AddMatch',  # hey, it works
