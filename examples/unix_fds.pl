@@ -20,6 +20,8 @@ my $dbus = Protocol::DBus::Client::system();
 
 $dbus->do_authn();
 
+my $signal_name = 'ProtocolDBusFDPass';
+
 $dbus->send_call(
     member => 'AddMatch',
     signature => 's',
@@ -27,7 +29,7 @@ $dbus->send_call(
     interface => 'org.freedesktop.DBus',
     path => '/org/freedesktop/DBus',
     body => [
-       "type='signal'",
+       "type=signal,member=$signal_name",
     ]
 );
 
@@ -43,7 +45,7 @@ my $pid = fork or do {
     pipe my ($r, $w);
 
     $dbus->send_signal(
-        member => 'AddMatch',  # hey, it works
+        member => $signal_name,
         signature => 'h',
         destination => $recv_name,
         interface => 'org.freedesktop.DBus',
