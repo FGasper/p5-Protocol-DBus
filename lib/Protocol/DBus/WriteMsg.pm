@@ -8,25 +8,12 @@ use parent qw( IO::Framed::Write );
 use Socket;
 use Socket::MsgHdr;
 
-my %obj_fh;
-my %fh_obj;
-
-sub new {
-    my ($class, $out_fh) = @_;
-
-    my $self = $class->SUPER::new($out_fh);
-
-    $fh_obj{$out_fh} = $self;
-    $obj_fh{$self} = $out_fh;
-
-    return $self;
-}
+my %fh_fds;
 
 sub DESTROY {
     my ($self) = @_;
 
-    my $fh = delete $obj_fh{$self};
-    delete $fh_obj{$fh};
+    my $fh = delete $fh_fds{ $self->get_write_fh() };
 
     return;
 }
@@ -34,14 +21,15 @@ sub DESTROY {
 sub enqueue_message {
     my ($self, $buf_sr, $fds_ar) = @_;
 
-    push @{ $self->{'_message_fds'} }, ($fds_ar && @$fds_ar) ? $fds_ar : undef;
+    push @{ $fh_fds{$self->get_write_fh()} }, ($fds_ar && @$fds_ar) ? $fds_ar : undef;
 
     $self->write(
         $$buf_sr,
         sub {
 
-            # We’re done with the message, so we remove the FDs.
-            shift @{ $self->{'_message_fds'} };
+            # We’re done with the message, so we remove the FDs entry,
+            # which by here should be undef.
+            shift @{ $fh_fds{$self->get_write_fh()} };
         },
     );
 
@@ -52,7 +40,7 @@ sub enqueue_message {
 sub WRITE {
 
     # Only use sendmsg if we actually need to.
-    if (my $fds_ar = $fh_obj{ $_[0] }{'_message_fds'}[0]) {
+    if (my $fds_ar = $fh_fds{ $_[0] }[0]) {
         my $msg = Socket::MsgHdr->new( buf => $_[1] );
 
         $msg->cmsghdr(
@@ -67,7 +55,7 @@ sub WRITE {
         # to resend. That appears to be the case on Linux and MacOS, but
         # I can’t find any actual documentation to that effect. <shrug>
         if ($bytes) {
-            undef $fh_obj{ $_[0] }{'_message_fds'}[0];
+            undef $fh_fds{ $_[0] }[0];
         }
 
         return $bytes;
