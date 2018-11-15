@@ -12,6 +12,10 @@ our $_ENDIAN_PACK;
 # message body. XXX FIXME This is a very hacky way to do it!
 our $FILEHANDLES;
 
+# Enable this to return variants as just the data, not
+# Protocol::DBus::Type::Variant instances.
+our $PRESERVE_VARIANT_SIGNATURES;
+
 # for testing
 our $DICT_CANONICAL;
 
@@ -280,7 +284,10 @@ sub _unmarshal_variant {
 
     (my $val, $len) = _unmarshal_sct( $buf_sr, $buf_offset, $sig );
 
-    return( $val, $len + $buf_offset - $buf_start );
+    return(
+        $PRESERVE_VARIANT_SIGNATURES ? bless( [ $sig => $val ], 'Protocol::DBus::Type::Variant' ) : $val,
+        $len + $buf_offset - $buf_start,
+    );
 }
 
 sub _get_pack_template {

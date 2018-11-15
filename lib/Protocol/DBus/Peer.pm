@@ -172,6 +172,26 @@ sub big_endian {
 
 #----------------------------------------------------------------------
 
+=head2 I<OBJ>->preserve_variant_signatures()
+
+Same interface as C<blocking()>, but when this is enabled
+variants are given as two-member array references ([ signature => value ]),
+blessed as C<Protocol::DBus::Type::Variant> instances.
+
+For most Perl applications this is probably not necessary, but if you
+want your messages to round-trip more easily, your life will be easier if
+you enable this option.
+
+=cut
+
+sub preserve_variant_signatures {
+    my $self = shift;
+
+    return $self->{'_parser'}->preserve_variant_signatures(@_);
+}
+
+#----------------------------------------------------------------------
+
 =head2 I<OBJ>->blocking()
 
 Same interface as L<IO::Handle>’s method of the same name.

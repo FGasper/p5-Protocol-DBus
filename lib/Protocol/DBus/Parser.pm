@@ -5,6 +5,7 @@ use warnings;
 
 use Socket::MsgHdr ();
 
+use Protocol::DBus::Marshal ();
 use Protocol::DBus::Message ();
 
 use constant _CHUNK_SIZE => 65536;
@@ -90,6 +91,7 @@ sub get_message {
             $self->{'_buf'} .= $msg->buf();
 
             if ($got >= $msg_buflen) {
+                local $Protocol::DBus::Marshal::PRESERVE_VARIANT_SIGNATURES = 1 if $self->{'_preserve_variant_signatures'};
 
                 # This clears out the buffer .. it should??
                 my $msg = Protocol::DBus::Message->parse( \$self->{'_buf'}, delete $self->{'_filehandles'} );
@@ -107,6 +109,16 @@ sub get_message {
     }
 
     return undef;
+}
+
+sub preserve_variant_signatures {
+    my $self = shift;
+
+    if (@_) {
+        $self->{'_preserve_variant_signatures'} = !!$_[0];
+    }
+
+    return !!$self->{'_preserve_variant_signatures'};
 }
 
 1;
