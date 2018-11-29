@@ -48,11 +48,14 @@ sub _create_xaction {
 
     my $auth_label = 'AUTH';
 
-    substr( $auth_label, 0, 0 ) = "\0" if !$self->{'_mechanism'}->can('send_initial');
+    if (!$self->{'_mechanism'}->can('send_initial')) {
+        substr( $auth_label, 0, 0 ) = "\0" if !$self->{'_mechanism'}->can('send_initial');
+        $self->{'_sent_initial'} = 1;
+    }
 
     # 0 = send; 1 = receive
     my @xaction = (
-        [ 0 => 'AUTH', $self->{'_mechanism'}->label(), $self->{'_mechanism'}->INITIAL_RESPONSE() ],
+        [ 0 => $auth_label, $self->{'_mechanism'}->label(), $self->{'_mechanism'}->INITIAL_RESPONSE() ],
         $self->{'_mechanism'}->AFTER_AUTH(),
 
         [ 1 => \&_consume_ok ],
