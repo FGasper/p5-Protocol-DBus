@@ -98,7 +98,12 @@ See the distribution’s F<examples/> directory.
 =item * Currently EXTERNAL is the only supported authentication mechanism.
 
 =item * UNIX FD support is “transparent”: send and receive Perl filehandles
-as part of message bodies. :)
+as part of message bodies. :) (Note that it does require L<Socket::MsgHdr>.)
+
+=item * Support on OSes other than Linux is intended but spotty. D-Bus’s
+EXTERNAL authentication mechanism (currently the only one supported) depends
+on passing credentials on a UNIX domain socket, which isn’t very portable.
+Patches to improve this are welcome.
 
 =back
 

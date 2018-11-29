@@ -46,6 +46,10 @@ sub negotiate_unix_fd {
 sub _create_xaction {
     my ($self) = @_;
 
+    my $auth_label = 'AUTH';
+
+    substr( $auth_label, 0, 0 ) = "\0" if !$self->{'_mechanism'}->can('send_initial');
+
     # 0 = send; 1 = receive
     my @xaction = (
         [ 0 => 'AUTH', $self->{'_mechanism'}->label(), $self->{'_mechanism'}->INITIAL_RESPONSE() ],

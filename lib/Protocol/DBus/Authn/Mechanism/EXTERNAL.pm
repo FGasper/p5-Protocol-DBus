@@ -10,8 +10,6 @@ sub INITIAL_RESPONSE { unpack 'H*', $> }
 sub AFTER_OK {
     my ($self) = @_;
 
-    return if !Socket::MsgHdr->can('new');
-
     return if $self->{'_skip_unix_fd'};
 
     return (
@@ -23,7 +21,16 @@ sub AFTER_OK {
 sub new {
     my $self = $_[0]->SUPER::new(@_[ 1 .. $#_ ]);
 
-    $self->{'_skip_unix_fd'} = 1 if !Socket->can('SCM_RIGHTS');
+    # On Linux, the server will have SO_PASSCRED enabled, which causes the
+    # kernel to insert SCM_CREDENTIALS into anything that recvmsg() receives,
+    # even if the sender didn’t make any effort to include SCM_CREDENTIALS.
+    # (The unix(7) man page is NOT clear about this!) Thus, this module
+    # doesn’t need to make any special effort to send credentials, and we
+    # can just fall back to having Authn.pm send the initial NUL byte.
+    #
+    # Other OSes are untested.
+
+    $self->{'_skip_unix_fd'} = 1 if !Socket::MsgHdr->can('new') || !Socket->can('SCM_RIGHTS');
 
     return $self;
 }
@@ -49,15 +56,9 @@ sub skip_unix_fd {
     return $self;
 }
 
-sub send_initial {
-    my ($class, $s) = @_;
-
-    my $ok = syswrite $s, "\0";
-    if (!$ok && !$!{'EAGAIN'}) {
-        die "write($s): $!";
-    }
-
-    return $ok;
-}
+# This was defined until I realized that the server’s enabled SO_PASSCRED
+# adds SCM_CREDENTIALS to everything the client sends regardless.
+#
+# sub send_intial { ... }
 
 1;
