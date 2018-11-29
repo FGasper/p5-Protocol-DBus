@@ -48,9 +48,10 @@ sub _create_xaction {
 
     my $auth_label = 'AUTH';
 
-    if (!$self->{'_mechanism'}->can('send_initial')) {
-        substr( $auth_label, 0, 0 ) = "\0" if !$self->{'_mechanism'}->can('send_initial');
-        $self->{'_sent_initial'} = 1;
+    # Unless the mechanism sends its own initial NUL, might as well use the
+    # same system call to send the initial NUL as we use to send the AUTH.
+    if (!$self->{'_mechanism'}->must_send_initial()) {
+        substr( $auth_label, 0, 0 ) = "\0";
     }
 
     # 0 = send; 1 = receive
