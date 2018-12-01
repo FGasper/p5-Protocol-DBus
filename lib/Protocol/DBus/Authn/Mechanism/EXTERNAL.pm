@@ -71,7 +71,7 @@ sub send_initial {
     #
     # Other OSes are untested.
     return !$self->must_send_initial() || do {
-        Protocol::DBus::MsgHdr::load();
+        Protocol::DBus::MsgHdr::load_for_authn();
 
         my $msg = Socket::MsgHdr->new( buf => "\0" );
 

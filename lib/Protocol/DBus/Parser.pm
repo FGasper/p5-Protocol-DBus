@@ -3,12 +3,9 @@ package Protocol::DBus::Parser;
 use strict;
 use warnings;
 
-use Socket::MsgHdr ();
-
 use Protocol::DBus::Marshal ();
 use Protocol::DBus::Message ();
-
-use constant _CHUNK_SIZE => 65536;
+use Protocol::DBus::MsgHdr  ();
 
 use constant SINGLE_UNIX_FD_CMSGHDR => (0, 0, pack 'I!');
 
@@ -67,13 +64,15 @@ sub get_message {
 
     if (defined $self->{'_unix_fds'}) {
 
-        my $msg_buflen = $self->{'_msgsz'} - length $self->{'_buf'};
+        my $needed_bytes = $self->{'_msgsz'} - length $self->{'_buf'};
 
         my $got;
 
         if ($self->{'_unix_fds'}) {
+            Protocol::DBus::MsgHdr::load_for_fds();
+
             my $msg = Socket::MsgHdr->new(
-                buflen => $msg_buflen,
+                buflen => $needed_bytes,
             );
 
             # The unix FDs might arrive in a single control
@@ -99,13 +98,13 @@ sub get_message {
             $got = sysread(
                 $self->{'_s'},
                 $self->{'_buf'},
-                $msg_buflen,
+                $needed_bytes,
                 length $self->{'_buf'},
             );
         }
 
         if (defined $got) {
-            if ($got >= $msg_buflen) {
+            if ($got >= $needed_bytes) {
                 local $Protocol::DBus::Marshal::PRESERVE_VARIANT_SIGNATURES = 1 if $self->{'_preserve_variant_signatures'};
 
                 # This clears out the buffer .. it should??
