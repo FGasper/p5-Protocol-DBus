@@ -84,17 +84,14 @@ See the distribution’s `examples/` directory.
 
 # NOTES
 
+- UNIX FD support requires that [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) be loaded at
+authentication time.
 - Currently EXTERNAL is the only supported authentication mechanism.
-- UNIX FD support is “transparent”: send and receive Perl filehandles
-as part of message bodies. :) (Note that it does require [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr).)
-- Support on OSes other than Linux is intended but spotty. D-Bus’s
-EXTERNAL authentication mechanism (currently the only one supported) depends
-on passing credentials on a UNIX domain socket, which isn’t very portable.
-Patches to improve this are welcome.
 
 # TODO
 
 - Add conveniences like match rule logic.
+- Improve parsing of bus paths in environment variables.
 - Add DBUS\_COOKIE\_SHA1 authentication.
 - Add more tests.
 

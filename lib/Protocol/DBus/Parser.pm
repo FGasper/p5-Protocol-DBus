@@ -5,7 +5,6 @@ use warnings;
 
 use Protocol::DBus::Marshal ();
 use Protocol::DBus::Message ();
-use Protocol::DBus::MsgHdr  ();
 
 use constant SINGLE_UNIX_FD_CMSGHDR => (0, 0, pack 'I!');
 
@@ -69,8 +68,6 @@ sub get_message {
         my $got;
 
         if ($self->{'_unix_fds'}) {
-            Protocol::DBus::MsgHdr::load_for_fds();
-
             my $msg = Socket::MsgHdr->new(
                 buflen => $needed_bytes,
             );
