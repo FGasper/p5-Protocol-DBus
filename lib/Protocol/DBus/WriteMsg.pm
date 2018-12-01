@@ -33,28 +33,12 @@ sub enqueue_message {
     return $self;
 }
 
-sub _load_socket_msghdr {
-
-    # Some older Perls have a problem with `local $@`.
-    my $dollar_at = $@;
-    eval { Protocol::DBus::MsgHdr::load(); 1 } or do {
-        die "Socket::MsgHdr (required to pass filehandles) failed to load: $@";
-    };
-    $@ = $dollar_at;
-
-    if (!Socket->can('SCM_RIGHTS')) {
-        die "Your OS ($^O) cannot pass filehandles via sockets!";
-    }
-
-    return;
-}
-
 # Receives ($fh, $buf)
 sub WRITE {
 
     # Only use sendmsg if we actually need to.
     if (my $fds_ar = $fh_fds{ $_[0] }[0]) {
-        _load_socket_msghdr() if !$INC{'Socket/MsgHdr.pm'};
+        die 'Socket::MsgHdr is not loaded!' if !Socket::MsgHdr->can('new');
 
         my $msg = Socket::MsgHdr->new( buf => $_[1] );
 

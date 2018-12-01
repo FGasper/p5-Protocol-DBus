@@ -35,12 +35,8 @@ sub new {
     return $self;
 }
 
-sub negotiate_unix_fd {
-    my ($self) = @_;
-
-    $self->{'_negotiate_unix_fd'} = 1;
-
-    return $self;
+sub negotiated_unix_fd {
+    return $_[0]->{'_mechanism'}->negotiated_unix_fd();
 }
 
 sub _create_xaction {
