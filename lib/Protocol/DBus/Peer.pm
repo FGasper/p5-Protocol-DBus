@@ -264,7 +264,7 @@ sub _send_msg {
 
     my ($buf_sr, $fds_ar) = $msg->can($self->{'_to_str_fn'})->($msg);
 
-    if (@$fds_ar && !$self->supports_unix_fd()) {
+    if ($fds_ar && @$fds_ar && !$self->supports_unix_fd()) {
         die "Cannot send file descriptors without UNIX FD support!";
     }
 

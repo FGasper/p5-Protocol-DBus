@@ -36,7 +36,7 @@ sub new {
 }
 
 sub negotiated_unix_fd {
-    return $_[0]->{'_mechanism'}->negotiated_unix_fd();
+    return $_[0]->{'_negotiated_unix_fd'} ? 1 : 0;
 }
 
 sub _create_xaction {

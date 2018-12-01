@@ -30,7 +30,7 @@ sub _consume_agree_unix_fd {
     my ($authn, $line) = @_;
 
     if ($line eq 'AGREE_UNIX_FD') {
-        $authn->{'_can_pass_unix_fd'} = 1;
+        $authn->{'_negotiated_unix_fd'} = 1;
     }
     elsif (index($line, 'ERROR ') == 0) {
         warn "Server rejected unix fd passing: " . substr($line, 6) . $/;
