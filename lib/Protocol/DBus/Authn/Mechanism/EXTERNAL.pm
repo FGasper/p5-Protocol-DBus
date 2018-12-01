@@ -53,48 +53,31 @@ sub must_send_initial {
     my ($self) = @_;
 
     if (!defined $self->{'_must_send_initial'}) {
-        $self->{'_must_send_initial'} = ($< != $>) || (split m< >, $( )[0] != (split m< >, $) )[0] || 0;
+        my ;
+
+        # On Linux and BSD OSes this module doesn’t need to make any special
+        # effort to send credentials because the server will request them on
+        # its own. (Although Linux only sends the real credentials, we’ll
+        # send the EUID in the EXTERNAL handshake.)
+        #
+        $can_skip_msghdr = Socket->can('SCM_CREDENTIALS');
+
+        # MacOS doesn’t appear to have an equivalent to SO_PASSCRED
+        # but does have SCM_CREDS, so we have to blacklist it specifically.
+        $can_skip_msghdr ||= Socket->can('SCM_CREDS') && !grep { $^O eq $_ } qw( darwin cygwin );
+
+        $self->{'_must_send_initial'} = !$can_skip_msghdr;
     }
 
     return $self->{'_must_send_initial'};
 }
 
 sub send_initial {
-    my ($self, $s) = @_;
+    my ($self) = @_;
 
-    # On Linux, the server will have SO_PASSCRED enabled, which causes the
-    # kernel to insert SCM_CREDENTIALS into anything that recvmsg() receives,
-    # even if the sender didn’t make any effort to include SCM_CREDENTIALS.
-    # (The unix(7) man page is NOT clear about this!) Thus, this module
-    # doesn’t need to make any special effort to send credentials, and we
-    # can just fall back to having Authn.pm send the initial NUL byte.
-    #
-    # Other OSes are untested.
-    return !$self->must_send_initial() || do {
-        Protocol::DBus::MsgHdr::load_for_authn();
-
-        my $msg = Socket::MsgHdr->new( buf => "\0" );
-
-        my $ok;
-
-        if (Socket->can('SCM_CREDENTIALS')) {
-            my $ucred = pack( 'I*', $$, $>, (split m< >, $))[0]);
-
-            $msg->cmsghdr( Socket::SOL_SOCKET(), Socket::SCM_CREDENTIALS(), $ucred );
-
-            local $!;
-            $ok = Socket::MsgHdr::sendmsg($s, $msg, Socket::MSG_NOSIGNAL() );
-
-            if (!$ok && !$!{'EAGAIN'}) {
-                die "sendmsg($s): $!";
-            }
-        }
-        else {
-            die "Unsupported OS: $^O";
-        }
-
-        $ok;
-    };
+    # There are no known platforms where sendmsg will achieve anything
+    # that plain write() doesn’t already get us.
+    die "Unsupported OS: $^O";
 }
 
 1;

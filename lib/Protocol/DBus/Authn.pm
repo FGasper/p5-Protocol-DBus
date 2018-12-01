@@ -100,9 +100,8 @@ sub go {
 
     my $s = $self->{'_socket'};
 
-    $self->{'_sent_initial'} ||= do {
-        $self->{'_mechanism'}->send_initial($s);
-    };
+    # Don’t send_initial() if !must_send_initial().
+    $self->{'_sent_initial'} ||= !$self->{'_mechanism'}->must_send_initial() || $self->{'_mechanism'}->send_initial($s);
 
     if ($self->{'_sent_initial'}) {
       LINES:

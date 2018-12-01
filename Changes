@@ -1,8 +1,9 @@
 Revision history for Perl module Protocol::DBus
 
-0.06 Web 28 Nov 2018
-- Drop Socket::MsgHdr requirement. FD passing still requires it,
-but otherwise it works just to use syswrite().
+0.06
+- Socket::MsgHdr is no longer required.
+- BREAKING CHANGE: Socket::MsgHdr must now be loaded prior to D-Bus
+authentication in order for UNIX FD passing to work.
 
 0.05 Thu 15 Nov 2018
 - Add proper UNIX_FD support and an example of its use.
