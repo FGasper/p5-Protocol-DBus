@@ -5,8 +5,6 @@ use warnings;
 
 use parent qw( IO::Framed::Write );
 
-use Protocol::DBus::MsgHdr;
-
 my %fh_fds;
 
 sub DESTROY {

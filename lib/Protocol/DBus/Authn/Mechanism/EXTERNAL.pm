@@ -3,8 +3,6 @@ package Protocol::DBus::Authn::Mechanism::EXTERNAL;
 use strict;
 use warnings;
 
-use Protocol::DBus::MsgHdr ();
-
 use parent 'Protocol::DBus::Authn::Mechanism';
 
 sub INITIAL_RESPONSE { unpack 'H*', $> }
@@ -53,14 +51,13 @@ sub must_send_initial {
     my ($self) = @_;
 
     if (!defined $self->{'_must_send_initial'}) {
-        my ;
 
         # On Linux and BSD OSes this module doesn’t need to make any special
         # effort to send credentials because the server will request them on
         # its own. (Although Linux only sends the real credentials, we’ll
         # send the EUID in the EXTERNAL handshake.)
         #
-        $can_skip_msghdr = Socket->can('SCM_CREDENTIALS');
+        my $can_skip_msghdr = Socket->can('SCM_CREDENTIALS');
 
         # MacOS doesn’t appear to have an equivalent to SO_PASSCRED
         # but does have SCM_CREDS, so we have to blacklist it specifically.
