@@ -6,6 +6,7 @@ MANIFEST
 Makefile.PL
 README.md
 examples/anyevent.pl
+examples/credentials.pl
 examples/introspect.pl
 examples/introspect_nb.pl
 examples/packagekit.pl
