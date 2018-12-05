@@ -37,8 +37,10 @@ sub AFTER_AUTH {
     my ($self) = @_;
 
     return (
-        [ 1 => \&_consume_data ],
-        [ 0 => \&_respond_data ],
+        [ 1 => sub {
+            _consume_data($self, @_);
+        } ],
+        [ 0 => \&_authn_respond_data ],
     );
 }
 
@@ -51,7 +53,7 @@ sub _getpw {
 }
 
 sub _consume_data {
-    my ($authn, $line) = @_;
+    my ($self, $authn, $line) = @_;
 
     if (0 != index($line, 'DATA ')) {
         die "Invalid line: [$line]";
@@ -61,7 +63,7 @@ sub _consume_data {
 
     my ($ck_ctx, $ck_id, $sr_challenge) = split m< >, pack( 'H*', $line );
 
-    my $cookie = _get_cookie($ck_ctx, $ck_id);
+    my $cookie = $self->_get_cookie($ck_ctx, $ck_id);
 
     my $cl_challenge = pack( 's8', map { rand 65536 } 1 .. 8 );
 
@@ -79,14 +81,14 @@ sub _consume_data {
     return;
 }
 
-sub _respond_data {
+sub _authn_respond_data {
     return $_[0]->{'_sha1_response'} || do {
         die "No SHA1 DATA response set!";
     };
 }
 
 sub _get_cookie {
-    my ($ck_ctx, $ck_id) = @_;
+    my ($self, $ck_ctx, $ck_id) = @_;
 
     my $path = File::Spec->catfile(
         ($self->_getpw())[7],
