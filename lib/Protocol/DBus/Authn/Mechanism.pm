@@ -5,9 +5,14 @@ use warnings;
 
 use constant INITIAL_RESPONSE => ();
 use constant AFTER_AUTH => ();
-use constant AFTER_OK => ();
 
-sub new { return bless {}, shift }
+sub new {
+    my $self = bless {}, shift;
+
+    $self->{'_skip_unix_fd'} = 1 if !Socket::MsgHdr->can('new') || !Socket->can('SCM_RIGHTS');
+
+    return $self;
+}
 
 sub label {
     my $class = ref($_[0]) || $_[0];
