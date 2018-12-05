@@ -7,6 +7,8 @@ use warnings;
 
 use parent qw( Protocol::DBus::Authn::Mechanism );
 
+use File::Spec ();
+
 my $sha_module;
 
 use constant must_send_initial => 0;
@@ -112,6 +114,8 @@ sub _get_cookie {
 
         return substr( $line, 1 + index($line, q< >, 2 + length($ck_id)) );
     }
+
+    warn "readline: $!" if $!;
 
     die "Failed to find cookie “$ck_id” in “$path”!";
 }
