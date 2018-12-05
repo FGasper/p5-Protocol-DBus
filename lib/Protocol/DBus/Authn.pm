@@ -110,7 +110,16 @@ sub go {
                     $cur->[1]->($self, $line);
                 }
                 else {
-                    $self->_send_line(join(' ', @{$cur}[ 1 .. $#$cur ])) or last LINES;
+                    my @line_parts;
+
+                    if ('CODE' eq ref $cur->[1]) {
+                        @line_parts = $cur->[1]->();
+                    }
+                    else {
+                        @line_parts = @{$cur}[ 1 .. $#$cur ];
+                    }
+
+                    $self->_send_line("@line_parts") or last LINES;
                 }
 
                 shift @{ $self->{'_xaction'} };
