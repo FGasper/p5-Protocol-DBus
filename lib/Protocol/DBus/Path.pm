@@ -12,6 +12,7 @@ use constant _DEFAULT_SYSTEM_MESSAGE_BUS => 'unix:path=/var/run/dbus/system_bus_
 # or starting one if a running instance cannot be found.
 sub login_session_message_bus {
     return _parse_one_path($ENV{'DBUS_SESSION_BUS_ADDRESS'});
+}
 
 sub system_message_bus {
     return _parse_one_path( $ENV{'DBUS_SYSTEM_BUS_ADDRESS'} || _DEFAULT_SYSTEM_MESSAGE_BUS() );

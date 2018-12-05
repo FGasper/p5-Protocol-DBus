@@ -14,6 +14,7 @@ examples/receive.pl
 examples/unix_fds.pl
 lib/Protocol/DBus.pm
 lib/Protocol/DBus/.Connection.pm.swp
+lib/Protocol/DBus/Address.pm
 lib/Protocol/DBus/Authn.pm
 lib/Protocol/DBus/Authn/Mechanism.pm
 lib/Protocol/DBus/Authn/Mechanism/DBUS_COOKIE_SHA1.pm
@@ -30,6 +31,7 @@ lib/Protocol/DBus/Path.pm
 lib/Protocol/DBus/Peer.pm
 lib/Protocol/DBus/Signature.pm
 lib/Protocol/DBus/WriteMsg.pm
+t/Protocol-DBus-Address.t
 t/Protocol-DBus-Authn-Mechanism-EXTERNAL.t
 t/Protocol-DBus-Marshal.t
 t/Protocol-DBus-Message.t
