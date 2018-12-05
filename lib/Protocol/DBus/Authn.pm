@@ -7,8 +7,6 @@ use Module::Load ();
 
 use IO::Framed ();
 
-use Protocol::DBus::Authn::IO ();
-
 use constant _CRLF => "\x0d\x0a";
 
 sub new {
