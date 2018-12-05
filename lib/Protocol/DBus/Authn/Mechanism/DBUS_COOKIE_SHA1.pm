@@ -13,7 +13,10 @@ my $sha_module;
 
 use constant must_send_initial => 0;
 
-use constant KEYRINGS_DIR => '.dbus-keyrings';
+use constant {
+    KEYRINGS_DIR => '.dbus-keyrings',
+    DEBUG => 0,
+};
 
 sub new {
     my ($class) = @_;
@@ -69,9 +72,22 @@ sub _consume_data {
 
     my ($ck_ctx, $ck_id, $sr_challenge) = split m< >, pack( 'H*', $line );
 
+    if (DEBUG()) {
+        print STDERR (
+            "AUTHN/SHA1 context: $ck_ctx$/",
+            "AUTHN/SHA1 cookie ID: $ck_id$/",
+            "AUTHN/SHA1 server challenge: $sr_challenge$/",
+        );
+    }
+
     my $cookie = $self->_get_cookie($ck_ctx, $ck_id);
 
     my $cl_challenge = pack( 's8', map { rand 65536 } 1 .. 8 );
+
+    # Ensure that we use only hex characters for the challenge,
+    # or else the challenge might have a colon, space, or something else
+    # problematic.
+    $cl_challenge = _sha1_hex($cl_challenge);
 
     my $str = join(
         ':',
@@ -80,11 +96,23 @@ sub _consume_data {
         $cookie,
     );
 
-    my $str_digest = $sha_module->can('sha1_hex')->($str);
+    my $str_digest = _sha1_hex($str);
+
+    if (DEBUG()) {
+        print STDERR (
+            "AUTHN/SHA1 cookie: $cookie$/",
+            "AUTHN/SHA1 client challenge: $ck_id$/",
+            "AUTHN/SHA1 string: $str$/",
+        );
+    }
 
     $authn->{'_sha1_response'} = unpack 'H*', "$cl_challenge $str_digest";
 
     return;
+}
+
+sub _sha1_hex {
+    return $sha_module->can('sha1_hex')->($_[0]);
 }
 
 sub _authn_respond_data {

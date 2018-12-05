@@ -11,6 +11,8 @@ use Protocol::DBus::X ();
 
 use constant _CRLF => "\x0d\x0a";
 
+use constant DEBUG => 0;
+
 sub new {
     my ($class, %opts) = @_;
 
@@ -125,7 +127,7 @@ sub go {
                         }
                     }
 
-                    while (my $mech = @to_try) {
+                    while (my $mech = shift @to_try) {
                         if ($self->_set_mechanism($mech)) {
                             redo LINES;
                         }
@@ -210,6 +212,8 @@ sub _consume_ok {
 sub _send_line {
     my ($self) = @_;
 
+    DEBUG() && print STDERR "AUTHN SENDING: [$_[1]]$/";
+
     my $ok = $self->{'_io'}->write( $_[1] . _CRLF() );
     return $self->_flush_write_queue();
 }
@@ -227,6 +231,8 @@ sub _read_line {
 
     if ($line = $_[0]->{'_io'}->read_until("\x0d\x0a")) {
         substr( $line, -2 ) = q<>;
+
+        DEBUG() && print STDERR "AUTHN RECEIVED: [$line]$/";
 
         if (0 == index( $line, 'REJECTED ')) {
             die Protocol::DBus::X->create(

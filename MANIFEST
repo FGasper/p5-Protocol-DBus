@@ -32,6 +32,9 @@ lib/Protocol/DBus/Path.pm
 lib/Protocol/DBus/Peer.pm
 lib/Protocol/DBus/Signature.pm
 lib/Protocol/DBus/WriteMsg.pm
+lib/Protocol/DBus/X.pm
+lib/Protocol/DBus/X/Base.pm
+lib/Protocol/DBus/X/Rejected.pm
 t/Protocol-DBus-Address.t
 t/Protocol-DBus-Authn-Mechanism-EXTERNAL.t
 t/Protocol-DBus-Marshal.t

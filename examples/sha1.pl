@@ -18,8 +18,7 @@ socket my $s, Socket::AF_UNIX, Socket::SOCK_STREAM, 0;
 connect $s, $addr;
 
 my $dbus = Protocol::DBus::Client->new(
-    #authn_mechanism => 'DBUS_COOKIE_SHA1',
-    authn_mechanism => 'EXTERNAL',
+    authn_mechanism => 'DBUS_COOKIE_SHA1',
     socket => $s,
 );
 
