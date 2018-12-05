@@ -16,6 +16,7 @@ lib/Protocol/DBus.pm
 lib/Protocol/DBus/.Connection.pm.swp
 lib/Protocol/DBus/Authn.pm
 lib/Protocol/DBus/Authn/Mechanism.pm
+lib/Protocol/DBus/Authn/Mechanism/DBUS_COOKIE_SHA1.pm
 lib/Protocol/DBus/Authn/Mechanism/EXTERNAL.pm
 lib/Protocol/DBus/Client.pm
 lib/Protocol/DBus/Connect.pm
