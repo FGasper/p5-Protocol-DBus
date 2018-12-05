@@ -1,7 +1,11 @@
 package Protocol::DBus::Authn::Mechanism::DBUS_COOKIE_SHA1;
 
+# https://dbus.freedesktop.org/doc/dbus-specification.html#auth-mechanisms-sha
+
 use strict;
 use warnings;
+
+use parent qw( Protocol::DBus::Authn::Mechanism );
 
 my $sha_module;
 
@@ -82,9 +86,12 @@ sub _consume_data {
 }
 
 sub _authn_respond_data {
-    return $_[0]->{'_sha1_response'} || do {
-        die "No SHA1 DATA response set!";
-    };
+    return (
+        'DATA',
+        $_[0]->{'_sha1_response'} || do {
+           die "No SHA1 DATA response set!";
+        },
+    );
 }
 
 sub _get_cookie {

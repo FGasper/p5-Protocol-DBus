@@ -113,7 +113,7 @@ sub go {
                     my @line_parts;
 
                     if ('CODE' eq ref $cur->[1]) {
-                        @line_parts = $cur->[1]->();
+                        @line_parts = $cur->[1]->($self);
                     }
                     else {
                         @line_parts = @{$cur}[ 1 .. $#$cur ];
