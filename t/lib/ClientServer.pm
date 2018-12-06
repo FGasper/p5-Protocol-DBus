@@ -60,8 +60,6 @@ sub _run {
 
     my $server_pid = fork or do {
         my $ok = eval {
-            require Socket::MsgHdr;
-
             close $cln;
 
             my $dbsrv = MockDBusServer->new($srv);
