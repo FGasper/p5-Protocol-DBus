@@ -5,6 +5,7 @@ use warnings;
 
 use Call::Context;
 
+# Not a very choosy parser, and it doesn’t try to validate anything.
 sub parse {
     Call::Context::must_be_list();
 
@@ -17,7 +18,7 @@ sub parse {
             map { split m<=>, $_ } (split m<,>, $_),
         );
 
-        s<%(..)><chr hex $1>g for values %kvs;
+        s<%(..)><chr hex $1>ge for values %kvs;
 
         \%kvs;
     } ( split m<;>, $_[0] );

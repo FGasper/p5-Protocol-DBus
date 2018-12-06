@@ -7,6 +7,8 @@ use warnings;
 
 use parent qw( Protocol::DBus::Authn::Mechanism );
 
+use Protocol::DBus::Authn::Mechanism::DBUS_COOKIE_SHA1::Pieces ();
+
 use File::Spec ();
 
 my $sha_module;
@@ -14,7 +16,6 @@ my $sha_module;
 use constant must_send_initial => 0;
 
 use constant {
-    KEYRINGS_DIR => '.dbus-keyrings',
     DEBUG => 0,
 };
 
@@ -82,12 +83,7 @@ sub _consume_data {
 
     my $cookie = $self->_get_cookie($ck_ctx, $ck_id);
 
-    my $cl_challenge = pack( 's8', map { rand 65536 } 1 .. 8 );
-
-    # Ensure that we use only hex characters for the challenge,
-    # or else the challenge might have a colon, space, or something else
-    # problematic.
-    $cl_challenge = _sha1_hex($cl_challenge);
+    my $cl_challenge = _create_challenge();
 
     my $str = join(
         ':',
@@ -111,10 +107,6 @@ sub _consume_data {
     return;
 }
 
-sub _sha1_hex {
-    return $sha_module->can('sha1_hex')->($_[0]);
-}
-
 sub _authn_respond_data {
     return (
         'DATA',
@@ -124,28 +116,18 @@ sub _authn_respond_data {
     );
 }
 
+*_sha1_hex = \&Protocol::DBus::Authn::Mechanism::DBUS_COOKIE_SHA1::Pieces::sha1_hex;
+
+*_create_challenge = \&Protocol::DBus::Authn::Mechanism::DBUS_COOKIE_SHA1::Pieces::create_challenge;
+
 sub _get_cookie {
     my ($self, $ck_ctx, $ck_id) = @_;
 
-    my $path = File::Spec->catfile(
+    return Protocol::DBus::Authn::Mechanism::DBUS_COOKIE_SHA1::Pieces::get_cookie(
         ($self->_getpw())[7],
-        KEYRINGS_DIR(),
         $ck_ctx,
+        $ck_id,
     );
-
-    open my $rfh, '<', $path or die "open(< $path): $!";
-
-    while ( my $line = <$rfh> ) {
-        chomp $line;
-
-        next if 0 != index( $line, "$ck_id " );
-
-        return substr( $line, 1 + index($line, q< >, 2 + length($ck_id)) );
-    }
-
-    warn "readline: $!" if $!;
-
-    die "Failed to find cookie “$ck_id” in “$path”!";
 }
 
 1;

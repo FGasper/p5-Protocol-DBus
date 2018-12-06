@@ -21,7 +21,8 @@ sub new {
 
     $opts{"_$_"} = delete $opts{$_} for keys %opts;
 
-    $opts{'_can_pass_unix_fd'} = Socket->can('SCM_RIGHTS');
+    $opts{'_can_pass_unix_fd'} = Socket::MsgHdr->can('new');
+    $opts{'_can_pass_unix_fd'} &&= Socket->can('SCM_RIGHTS');
     $opts{'_can_pass_unix_fd'} &&= _is_unix_socket($opts{'_socket'});
 
     $opts{'_io'} = IO::Framed->new( $opts{'_socket'} )->enable_write_queue();
@@ -228,6 +229,8 @@ sub _flush_write_queue {
 
 sub _read_line {
     my $line;
+
+    DEBUG() && print STDERR "AUTHN RECEIVING …$/";
 
     if ($line = $_[0]->{'_io'}->read_until("\x0d\x0a")) {
         substr( $line, -2 ) = q<>;
