@@ -98,7 +98,7 @@ See the distribution’s F<examples/> directory.
 =item * UNIX FD support requires that L<Socket::MsgHdr> be loaded at
 authentication time.
 
-=item * Currently EXTERNAL is the only supported authentication mechanism.
+=item * EXTERNAL and DBUS_COOKIE_SHA1 authentication is supported.
 
 =back
 
@@ -109,8 +109,6 @@ authentication time.
 =item * Add conveniences like match rule logic.
 
 =item * Improve parsing of bus paths in environment variables.
-
-=item * Add DBUS_COOKIE_SHA1 authentication.
 
 =item * Add more tests.
 
