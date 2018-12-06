@@ -25,6 +25,17 @@ sub do_tests {
     return;
 }
 
+sub can_socket_msghdr {
+    return do {
+        my $pid = fork or do {
+            exit( eval { require Socket::MsgHdr; 1 } ? 0 : 1 );
+        };
+
+        waitpid $pid, 0;
+        !$?;
+    };
+}
+
 sub _run {
     my ($client_cr, $server_cr) = @_;
 

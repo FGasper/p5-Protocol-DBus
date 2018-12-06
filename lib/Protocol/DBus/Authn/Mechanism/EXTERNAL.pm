@@ -7,6 +7,8 @@ use parent 'Protocol::DBus::Authn::Mechanism';
 
 sub INITIAL_RESPONSE { unpack 'H*', $> }
 
+# The reference server implementation does a number of things to try to
+# fetch the peer credentials. See dbus/dbus-sysdeps-unix.c.
 sub must_send_initial {
     my ($self) = @_;
 
@@ -17,11 +19,9 @@ sub must_send_initial {
         # its own. (Although Linux only sends the real credentials, we’ll
         # send the EUID in the EXTERNAL handshake.)
         #
-        my $can_skip_msghdr = Socket->can('SCM_CREDENTIALS');
-
-        # MacOS doesn’t appear to have an equivalent to SO_PASSCRED
-        # but does have SCM_CREDS, so we have to blacklist it specifically.
-        $can_skip_msghdr ||= Socket->can('SCM_CREDS') && !grep { $^O eq $_ } qw( darwin cygwin );
+        my $can_skip_msghdr = Socket->can('SO_PEERCRED');
+        $can_skip_msghdr ||= Socket->can('LOCAL_PEEREID');
+        $can_skip_msghdr ||= Socket->can('LOCAL_PEERCRED');
 
         $self->{'_must_send_initial'} = !$can_skip_msghdr;
     }

@@ -42,6 +42,55 @@ mkdir $keyrings_dir;
 
 my @tests = (
     {
+        label => 'without unix fd',
+        client => sub {
+            my ($cln) = @_;
+
+            my $authn = Protocol::DBus::Authn->new(
+                socket => $cln,
+                mechanism => 'DBUS_COOKIE_SHA1',
+            );
+
+            $authn->go();
+        },
+        server => sub {
+            my ($dbsrv) = @_;
+            my $line = $dbsrv->get_line();
+
+            my $ruid_hex = unpack('H*', $username);
+
+            is(
+                $line,
+                "AUTH DBUS_COOKIE_SHA1 $ruid_hex",
+                'first line',
+            );
+
+            {
+                open my $wfh, '>>', "$keyrings_dir/org_freedesktop_general";
+                printf {$wfh} "%s %s %s$/", 1240694009, time, 'b0fa6f735d59ed7bd0394faaa04d6f78adcbe258bd90b050';
+            }
+
+            $dbsrv->send_line('DATA 6f72675f667265656465736b746f705f67656e6572616c2031323430363934303039206634376636313633643563633432306433616163313333363838303961646463');
+
+            $line = $dbsrv->get_line();
+
+            is(
+                $line,
+                'DATA 373733306361653031666562646464376431323361353261386437343264633231323933306464652066373737333337623064613830633238363835376163343830613737353864353239346533376231',
+                'client response',
+            );
+
+            $dbsrv->send_line('OK 1234deadbeef');
+
+            $line = $dbsrv->get_line();
+
+            is( $line, 'BEGIN', 'last line: BEGIN' );
+        },
+    },
+);
+
+if (ClientServer::can_socket_msghdr()) {
+    push @tests, {
         label => 'with unix fd',
         client => sub {
             my ($cln) = @_;
@@ -94,54 +143,11 @@ my @tests = (
 
             is( $line, 'BEGIN', 'last line: BEGIN' );
         },
-    },
-    {
-        label => 'without unix fd',
-        client => sub {
-            my ($cln) = @_;
-
-            my $authn = Protocol::DBus::Authn->new(
-                socket => $cln,
-                mechanism => 'DBUS_COOKIE_SHA1',
-            );
-
-            $authn->go();
-        },
-        server => sub {
-            my ($dbsrv) = @_;
-            my $line = $dbsrv->get_line();
-
-            my $ruid_hex = unpack('H*', $username);
-
-            is(
-                $line,
-                "AUTH DBUS_COOKIE_SHA1 $ruid_hex",
-                'first line',
-            );
-
-            {
-                open my $wfh, '>>', "$keyrings_dir/org_freedesktop_general";
-                printf {$wfh} "%s %s %s$/", 1240694009, time, 'b0fa6f735d59ed7bd0394faaa04d6f78adcbe258bd90b050';
-            }
-
-            $dbsrv->send_line('DATA 6f72675f667265656465736b746f705f67656e6572616c2031323430363934303039206634376636313633643563633432306433616163313333363838303961646463');
-
-            $line = $dbsrv->get_line();
-
-            is(
-                $line,
-                'DATA 373733306361653031666562646464376431323361353261386437343264633231323933306464652066373737333337623064613830633238363835376163343830613737353864353239346533376231',
-                'client response',
-            );
-
-            $dbsrv->send_line('OK 1234deadbeef');
-
-            $line = $dbsrv->get_line();
-
-            is( $line, 'BEGIN', 'last line: BEGIN' );
-        },
-    },
-);
+    };
+}
+else {
+    diag "No Socket::MsgHdr available; can’t test unix FD negotiation.";
+}
 
 ClientServer::do_tests(@tests);
 
