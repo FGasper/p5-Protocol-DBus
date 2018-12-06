@@ -5,8 +5,6 @@ use warnings;
 
 use Socket ();
 
-use IO::SigGuard ('send');
-
 use Protocol::DBus::Socket ();
 
 use parent qw( IO::Framed::Write );
@@ -17,6 +15,8 @@ sub DESTROY {
     my ($self) = @_;
 
     my $fh = delete $fh_fds{ $self->get_write_fh() };
+
+    $self->SUPER::DESTROY();
 
     return;
 }
@@ -66,16 +66,7 @@ sub WRITE {
         return $bytes;
     }
 
-    #return IO::SigGuard::send( $_[0], $_[1], Socket::MSG_NOSIGNAL() );
-
-  SEND: {
-        my $bytes = Protocol::DBus::Socket::send_nosignal( $_[0], $_[1], 0 );
-        if (!defined $bytes) {
-            redo SEND if $!{'EINTR'};
-        }
-
-        return $bytes;
-    }
+    return Protocol::DBus::Socket::send_nosignal( $_[0], $_[1], 0 );
 }
 
 1;

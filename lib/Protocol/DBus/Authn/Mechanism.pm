@@ -9,8 +9,6 @@ use constant AFTER_AUTH => ();
 sub new {
     my $self = bless {}, shift;
 
-    $self->{'_skip_unix_fd'} = 1 if !Socket::MsgHdr->can('new') || !Socket->can('SCM_RIGHTS');
-
     return $self;
 }
 
