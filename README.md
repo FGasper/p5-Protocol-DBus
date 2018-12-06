@@ -86,13 +86,12 @@ See the distribution’s `examples/` directory.
 
 - UNIX FD support requires that [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) be loaded at
 authentication time.
-- Currently EXTERNAL is the only supported authentication mechanism.
+- EXTERNAL and DBUS\_COOKIE\_SHA1 authentication is supported.
 
 # TODO
 
 - Add conveniences like match rule logic.
 - Improve parsing of bus paths in environment variables.
-- Add DBUS\_COOKIE\_SHA1 authentication.
 - Add more tests.
 
 # SEE ALSO

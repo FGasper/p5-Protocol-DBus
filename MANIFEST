@@ -12,6 +12,7 @@ examples/introspect_nb.pl
 examples/packagekit.pl
 examples/receive.pl
 examples/sha1.pl
+examples/socket_cred.pl
 examples/unix_fds.pl
 lib/Protocol/DBus.pm
 lib/Protocol/DBus/.Connection.pm.swp
