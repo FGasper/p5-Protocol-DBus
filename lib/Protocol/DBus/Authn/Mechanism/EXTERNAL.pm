@@ -27,8 +27,8 @@ sub must_send_initial {
         # appear to be expected to send SCM_CREDS directly, even though
         # those OSes do have LOCAL_PEERCRED which should work.
         #
-        my $can_skip_msghdr = Socket->can('SO_PEERCRED');
-        $can_skip_msghdr ||= Socket->can('LOCAL_PEEREID');
+        my $can_skip_msghdr = eval { Socket::SO_PEERCRED(); 1 };
+        $can_skip_msghdr ||= eval { Socket::LOCAL_PEEREID(); 1 };
 
         $self->{'_must_send_initial'} = !$can_skip_msghdr;
     }
