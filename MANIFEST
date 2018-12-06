@@ -19,6 +19,7 @@ lib/Protocol/DBus/Address.pm
 lib/Protocol/DBus/Authn.pm
 lib/Protocol/DBus/Authn/Mechanism.pm
 lib/Protocol/DBus/Authn/Mechanism/DBUS_COOKIE_SHA1.pm
+lib/Protocol/DBus/Authn/Mechanism/DBUS_COOKIE_SHA1/Pieces.pm
 lib/Protocol/DBus/Authn/Mechanism/EXTERNAL.pm
 lib/Protocol/DBus/Client.pm
 lib/Protocol/DBus/Connect.pm
@@ -36,6 +37,8 @@ lib/Protocol/DBus/X.pm
 lib/Protocol/DBus/X/Base.pm
 lib/Protocol/DBus/X/Rejected.pm
 t/Protocol-DBus-Address.t
+t/Protocol-DBus-Authn-Mechanism-DBUS_SESSION_SHA1-Pieces.t
+t/Protocol-DBus-Authn-Mechanism-DBUS_SESSION_SHA1.t
 t/Protocol-DBus-Authn-Mechanism-EXTERNAL.t
 t/Protocol-DBus-Marshal.t
 t/Protocol-DBus-Message.t
