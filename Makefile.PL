@@ -32,6 +32,7 @@ WriteMakefile1(
         'Module::Load'  => 0,
         'Call::Context' => 0,
         'IO::Framed' => 0,
+        'IO::SigGuard' => 0.13,
     },
 
     TEST_REQUIRES => {

@@ -86,7 +86,7 @@ sub go {
       LINES:
         {
             if ( $self->{'_io'}->get_write_queue_count() ) {
-                $self->{'_io'}->flush_write_queue() or last LINES;
+                $self->flush_write_queue() or last LINES;
             }
 
             my $dollar_at = $@;
@@ -215,7 +215,8 @@ sub _send_line {
 
     DEBUG() && print STDERR "AUTHN SENDING: [$_[1]]$/";
 
-    my $ok = $self->{'_io'}->write( $_[1] . _CRLF() );
+    $self->{'_io'}->write( $_[1] . _CRLF() );
+
     return $self->_flush_write_queue();
 }
 
