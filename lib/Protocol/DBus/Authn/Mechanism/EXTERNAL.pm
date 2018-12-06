@@ -37,7 +37,7 @@ sub must_send_initial {
 }
 
 sub send_initial {
-    my ($self) = @_;
+    my ($self, $s) = @_;
 
     eval { require Socket::MsgHdr; 1 } or do {
         die "Socket::MsgHdr appears to be needed for EXTERNAL authn but failed to load: $@";
@@ -49,7 +49,7 @@ sub send_initial {
     $msg->cmsghdr( Socket::SOL_SOCKET(), Socket::SCM_CREDS(), "\0" x 64 );
 
     local $!;
-    $ok = Socket::MsgHdr::sendmsg($s, $msg, Socket::MSG_NOSIGNAL() );
+    my $ok = Socket::MsgHdr::sendmsg($s, $msg, Socket::MSG_NOSIGNAL() );
 
     if (!$ok && !$!{'EAGAIN'}) {
         die "sendmsg($s): $!";
