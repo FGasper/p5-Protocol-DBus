@@ -14,18 +14,6 @@ use ClientServer;
 
 use Protocol::DBus::Authn;
 
-do {
-    my $pid = fork or do {
-        require Socket::MsgHdr;
-        exit;
-    };
-
-    local $?;
-    waitpid $pid, 0;
-
-    BAIL_OUT('Need Socket::MsgHdr!') if $?;
-};
-
 my @tests = (
     {
         label => 'with unix fd',
@@ -43,16 +31,6 @@ my @tests = (
         },
         server => sub {
             my ($dbsrv) = @_;
-
-            my @ctl = $dbsrv->harvest_control();
-
-            cmp_deeply(
-                \@ctl,
-                [
-                    [ Socket::SOL_SOCKET(), ignore(), ignore() ],
-                ],
-                'credentials sent with first byte',
-            ) or diag explain \@ctl;
 
             my $line = $dbsrv->get_line();
 
@@ -92,16 +70,6 @@ my @tests = (
         server => sub {
             my ($dbsrv) = @_;
 
-            my @ctl = $dbsrv->harvest_control();
-
-            cmp_deeply(
-                \@ctl,
-                [
-                    [ Socket::SOL_SOCKET(), ignore(), ignore() ],
-                ],
-                'credentials sent with first byte',
-            ) or diag explain \@ctl;
-
             my $line = $dbsrv->get_line();
 
             my $ruid_hex = unpack('H*', $<);
@@ -120,10 +88,6 @@ my @tests = (
         },
     },
 );
-
-if (!ClientServer::server_credentials_opt()) {
-    plan skip_all => 'Need socket credential receptor logic for this test!';
-}
 
 ClientServer::do_tests(@tests);
 

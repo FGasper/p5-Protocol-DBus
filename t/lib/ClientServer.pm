@@ -25,12 +25,6 @@ sub do_tests {
     return;
 }
 
-sub server_credentials_opt {
-    my ($cred_opt) = grep { Socket->can($_) } qw( SO_PASSCRED LOCAL_CREDS );
-
-    return $cred_opt && eval { Socket->can($cred_opt)->() };
-}
-
 sub _run {
     my ($client_cr, $server_cr) = @_;
 
@@ -58,10 +52,6 @@ sub _run {
             require Socket::MsgHdr;
 
             close $cln;
-
-            if ( my $cred_opt = server_credentials_opt() ) {
-                setsockopt $srv, Socket::SOL_SOCKET, $cred_opt, 1;
-            }
 
             my $dbsrv = MockDBusServer->new($srv);
 
