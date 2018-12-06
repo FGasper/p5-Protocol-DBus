@@ -3,7 +3,11 @@ package Protocol::DBus::WriteMsg;
 use strict;
 use warnings;
 
+use Socket ();
+
 use IO::SigGuard ('send');
+
+use Protocol::DBus::Socket ();
 
 use parent qw( IO::Framed::Write );
 
@@ -38,8 +42,6 @@ sub enqueue_message {
 # Receives ($fh, $buf)
 sub WRITE {
 
-    # NB: We send with MSG_NOSIGNAL() to avoid SIGPIPE.
-
     # Only use sendmsg if we actually need to.
     if (my $fds_ar = $fh_fds{ $_[0] }[0]) {
         die 'Socket::MsgHdr is not loaded!' if !Socket::MsgHdr->can('new');
@@ -51,7 +53,7 @@ sub WRITE {
             pack( 'I!*', @$fds_ar ),
         );
 
-        my $bytes = Socket::MsgHdr::sendmsg( $_[0], $msg, Socket::MSG_NOSIGNAL() );
+        my $bytes = Protocol::DBus::Socket::sendmsg_nosignal( $_[0], $msg, 0 );
 
         # NOTE: This assumes that, on an incomplete write, the ancillary
         # data (i.e., the FDs) will have been sent, and there is no need
@@ -67,7 +69,7 @@ sub WRITE {
     #return IO::SigGuard::send( $_[0], $_[1], Socket::MSG_NOSIGNAL() );
 
   SEND: {
-        my $bytes = send $_[0], $_[1], Socket::MSG_NOSIGNAL();
+        my $bytes = Protocol::DBus::Socket::send_nosignal( $_[0], $_[1], 0 );
         if (!defined $bytes) {
             redo SEND if $!{'EINTR'};
         }

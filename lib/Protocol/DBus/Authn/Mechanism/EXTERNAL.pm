@@ -5,6 +5,8 @@ use warnings;
 
 use parent 'Protocol::DBus::Authn::Mechanism';
 
+use Protocol::DBus::Socket ();
+
 sub INITIAL_RESPONSE { unpack 'H*', $> }
 
 # The reference server implementation does a number of things to try to
@@ -30,6 +32,10 @@ sub must_send_initial {
         my $can_skip_msghdr = eval { Socket::SO_PEERCRED(); 1 };
         $can_skip_msghdr ||= eval { Socket::LOCAL_PEEREID(); 1 };
 
+        # macOS can’t send SCM_CREDS, despite that the constants
+        # are defined.
+        $can_skip_msghdr ||= ($^O eq 'darwin');
+
         $self->{'_must_send_initial'} = !$can_skip_msghdr;
     }
 
@@ -49,7 +55,7 @@ sub send_initial {
     $msg->cmsghdr( Socket::SOL_SOCKET(), Socket::SCM_CREDS(), "\0" x 64 );
 
     local $!;
-    my $ok = Socket::MsgHdr::sendmsg($s, $msg, Socket::MSG_NOSIGNAL() );
+    my $ok = Protocol::DBus::Socket::sendmsg_nosignal($s, $msg, 0);
 
     if (!$ok && !$!{'EAGAIN'}) {
         die "sendmsg($s): $!";
