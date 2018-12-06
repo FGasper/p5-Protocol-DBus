@@ -13,12 +13,7 @@ BEGIN {
 sub new {
     my ($class, $socket) = @_;
 
-    my $rmsg = Socket::MsgHdr->new(
-        buflen => 1024,
-        controllen => 512,
-    );
-
-    return bless { _s => $socket, _msg => $rmsg, _in => q<> }, $class;
+    return bless { _s => $socket, _in => q<> }, $class;
 }
 
 sub send_line {
@@ -36,16 +31,9 @@ sub getc {
         $c = substr( $self->{'_in'}, 0, 1, q<> );
     }
     else {
-        my $rmsg = Socket::MsgHdr->new(
-            buflen => 1,
-            controllen => 512,
-        );
+        sysread( $self->{'_s'}, $c, 1 ) or die "read(): $!";
 
-        $c = $rmsg->buf();
-
-        Socket::MsgHdr::recvmsg( $self->{'_s'}, $rmsg ) or die "recvmsg(): $!";
-
-        $self->_consume_control( $rmsg );
+        #$self->_consume_control( $rmsg );
     }
 
     return $c;
@@ -61,13 +49,9 @@ sub get_line {
 
         last if -1 != $crlf_at;
 
-        my $msg = $self->{'_msg'};
+        sysread( $self->{'_s'}, $self->{'_in'}, 512, length $self->{'_in'} ) or die "read(): $!";
 
-        Socket::MsgHdr::recvmsg( $self->{'_s'}, $msg ) or die "recvmsg(): $!";
-
-        $self->{'_in'} .= $msg->buf();
-
-        $self->_consume_control( $msg );
+        #$self->_consume_control( $msg );
     }
 
     return substr(
