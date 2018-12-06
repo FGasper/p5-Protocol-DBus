@@ -48,9 +48,9 @@ methods.
 =cut
 
 sub system {
-    my $addr = Protocol::DBus::Path::system_message_bus();
+    my @addrs = Protocol::DBus::Path::system_message_bus();
 
-    return _create_local($addr);
+    return _create_local(@addrs);
 }
 
 =head2 login_session()
@@ -60,11 +60,13 @@ Like C<system()> but for the login session’s message bus.
 =cut
 
 sub login_session {
-    my $addr = Protocol::DBus::Path::login_session_message_bus() or do {
-        die "Failed to identify login system message bus!";
-    };
+    my @addrs = Protocol::DBus::Path::login_session_message_bus();
 
-    return _create_local($addr);
+    if (!@addrs) {
+        die "Failed to identify login system message bus!";
+    }
+
+    return _create_local(@addrs);
 }
 
 sub _create_local {

@@ -41,6 +41,7 @@ t/Protocol-DBus-Address.t
 t/Protocol-DBus-Authn-Mechanism-DBUS_SESSION_SHA1-Pieces.t
 t/Protocol-DBus-Authn-Mechanism-DBUS_SESSION_SHA1.t
 t/Protocol-DBus-Authn-Mechanism-EXTERNAL.t
+t/Protocol-DBus-Connect.t
 t/Protocol-DBus-Marshal.t
 t/Protocol-DBus-Message.t
 t/Protocol-DBus-Parser-UnixFDs.t
