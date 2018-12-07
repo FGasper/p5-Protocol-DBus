@@ -31,7 +31,7 @@ WriteMakefile1(
         'X::Tiny'   => 0,
         'Module::Load'  => 0,
         'Call::Context' => 0,
-        'IO::Framed' => 0,
+        'IO::Framed' => 0.15,
         'IO::SigGuard' => 0.13,
     },
 
