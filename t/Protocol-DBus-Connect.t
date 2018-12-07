@@ -41,8 +41,11 @@ my $cln = Protocol::DBus::Connect::create_socket($addr_obj);
 
 isa_ok( $cln, 'GLOB', 'create_socket() creates a filehandle' );
 
+my $peername = getpeername($cln);
+tr<\0><>d for ($peername, $addr);
+
 is(
-    getpeername($cln),
+    $peername,
     $addr,
     '… and the socket is to where we expect',
 );
