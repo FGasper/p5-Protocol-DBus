@@ -254,7 +254,7 @@ sub _is_unix_socket {
 
     my $sname = getsockname($sk) or die "getsockname(): $!";
 
-    return unpack('xC', $sname) == Socket::AF_UNIX();
+    return Socket::sockaddr_family($sname) == Socket::AF_UNIX();
 }
 
 1;
