@@ -42,14 +42,18 @@ my $cln = Protocol::DBus::Connect::create_socket($addr_obj);
 
 isa_ok( $cln, 'GLOB', 'create_socket() creates a filehandle' );
 
-my $peername = getpeername($cln);
-tr<\0><>d for ($peername, $addr);
+SKIP: {
+    my $peername = getpeername($cln);
+    skip "Your OS ($^O) doesn’t report getpeername() … ?" if !$peername;
 
-is(
-    $peername,
-    $addr,
-    '… and the socket is to where we expect',
-);
+    tr<\0><>d for ($peername, $addr);
+
+    is(
+        $peername,
+        $addr,
+        '… and the socket is to where we expect',
+    );
+}
 
 sysread $cln, my $buf, 1;
 
