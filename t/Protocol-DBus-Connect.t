@@ -31,6 +31,7 @@ my $pid = fork or do {
         syswrite $new, 'q';
     };
     sleep;
+    exit;
 };
 
 close $s;
@@ -55,7 +56,7 @@ sysread $cln, my $buf, 1;
 is(
     $buf,
     'q',
-    'create_socket() connects to Address object’s indicated socket',
+    '… and a piece of data is transferred as expected',
 );
 
 kill 'QUIT', $pid;
