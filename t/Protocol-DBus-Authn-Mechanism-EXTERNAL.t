@@ -12,23 +12,72 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use ClientServer;
 
-use Protocol::DBus::Authn;
+use Protocol::DBus::Client;
+use Protocol::DBus::Peer;
+
+my $client_cr = sub {
+    my ($cln) = @_;
+
+    my $client = Protocol::DBus::Client->new(
+        socket => $cln,
+        authn_mechanism => 'EXTERNAL',
+    );
+
+    print "$$: Sending client authn\n";
+
+    $client->do_authn();
+
+    ok( $client->get_connection_name(), 'connection name is set after authn' );
+
+    print "$$: Done with client authn\n";
+};
+
+sub _server_finish_authn {
+    my ($dbsrv) = @_;
+
+    my $line = $dbsrv->get_line();
+
+    is( $line, 'BEGIN', 'last line: BEGIN' );
+
+    my $srv = Protocol::DBus::Peer->new( $dbsrv->socket() );
+
+    my $hello = $srv->get_message();
+
+    cmp_deeply(
+        $hello,
+        all(
+            Isa('Protocol::DBus::Message'),
+            methods(
+                [ type_is => 'METHOD_CALL' ] => 1,
+                [ get_header => 'PATH' ] => '/org/freedesktop/DBus',
+                [ get_header => 'INTERFACE' ] => 'org.freedesktop.DBus',
+                [ get_header => 'MEMBER' ] => 'Hello',
+                [ get_header => 'DESTINATION' ] => 'org.freedesktop.DBus',
+                get_body => undef,
+            ),
+        ),
+        '“Hello” message sent',
+    );
+
+    $srv->send_return(
+        $hello,
+        destination => ':1.1421',
+        sender => 'org.freedesktop.DBus',
+        signature => 's',
+        body => [':1.1421'],
+    );
+
+    return;
+}
 
 my @tests = (
     {
         label => 'without unix fd',
-        client => sub {
-            my ($cln) = @_;
-
-            my $authn = Protocol::DBus::Authn->new(
-                socket => $cln,
-                mechanism => 'EXTERNAL',
-            );
-
-            $authn->go();
-        },
+        client => $client_cr,
         server => sub {
             my ($dbsrv) = @_;
+
+            print "$$: in server\n";
 
             my $line = $dbsrv->get_line();
 
@@ -42,9 +91,7 @@ my @tests = (
 
             $dbsrv->send_line('OK 1234deadbeef');
 
-            $line = $dbsrv->get_line();
-
-            is( $line, 'BEGIN', 'last line: BEGIN' );
+            _server_finish_authn($dbsrv);
         },
     },
 );
@@ -57,15 +104,10 @@ if (ClientServer::can_socket_msghdr()) {
 
             require Socket::MsgHdr;
 
-            my $authn = Protocol::DBus::Authn->new(
-                socket => $cln,
-                mechanism => 'EXTERNAL',
-            );
-
-            $authn->go();
+            $client_cr->($cln);
         },
         server => sub {
-            my ($dbsrv) = @_;
+            my ($dbsrv, $peer) = @_;
 
             my $line = $dbsrv->get_line();
 
@@ -85,9 +127,7 @@ if (ClientServer::can_socket_msghdr()) {
 
             $dbsrv->send_line('AGREE_UNIX_FD');
 
-            $line = $dbsrv->get_line();
-
-            is( $line, 'BEGIN', 'last line: BEGIN' );
+            _server_finish_authn($dbsrv);
         },
     };
 }

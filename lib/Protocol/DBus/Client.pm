@@ -106,7 +106,17 @@ sub do_authn {
             );
         };
 
-        return 1;
+        if (!$self->{'_connection_name'}) {
+          GET_MESSAGE: {
+                if (my $msg = $self->SUPER::get_message()) {
+                    return 1 if $self->{'_connection_name'};
+
+                    push @{ $self->{'_pending_received_messages'} }, $msg;
+
+                    redo GET_MESSAGE;
+                }
+            }
+        }
     }
 
     return 0;
@@ -123,6 +133,12 @@ Only useful with non-blocking I/O.
 
 sub authn_pending_send {
     my ($self) = @_;
+
+    if (!$self->{'_connection_name'}) {
+        if ($self->{'_sent_hello'}) {
+            return $self->pending_send();
+        }
+    }
 
     return $self->{'_authn'}->pending_send();
 }
@@ -151,15 +167,18 @@ its response are abstracted
 =cut
 
 sub get_message {
-    if ( my $msg = $_[0]->SUPER::get_message() ) {
+    my ($self) = @_;
 
-        no warnings 'redefine';
-        *get_message = Protocol::DBus::Peer->can('get_message');
+    die "Authn is not finished!" if !$self->{'_connection_name'};
 
-        return $_[0]->get_message();
+    if ($self->{'_pending_received_messages'} && @{ $self->{'_pending_received_messages'} }) {
+        return shift @{ $self->{'_pending_received_messages'} };
     }
 
-    return undef;
+    no warnings 'redefine';
+    *get_message = Protocol::DBus::Peer->can('get_message');
+
+    return $_[0]->get_message();
 }
 
 =head2 $name = I<OBJ>->get_connection_name()
@@ -182,9 +201,9 @@ sub new {
         mechanism => $opts{'authn_mechanism'},
     );
 
-    my $self = bless { _socket => $opts{'socket'}, _authn => $authn }, $class;
+    my $self = $class->SUPER::new( $opts{'socket'} );
 
-    $self->_set_up_peer_io( $opts{'socket'} );
+    $self->{'_authn'} = $authn;
 
     return $self;
 }

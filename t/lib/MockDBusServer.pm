@@ -16,6 +16,10 @@ sub new {
     return bless { _s => $socket, _in => q<> }, $class;
 }
 
+sub socket {
+    return $_[0]->{'_s'};
+}
+
 sub send_line {
     my ($self, $payload) = @_;
 
@@ -42,24 +46,37 @@ sub getc {
 sub get_line {
     my ($self) = @_;
 
-    my $crlf_at;
+    my $line = q<>;
 
-    while (1) {
-        $crlf_at = index( $self->{'_in'}, $CRLF );
-
-        last if -1 != $crlf_at;
-
-        sysread( $self->{'_s'}, $self->{'_in'}, 512, length $self->{'_in'} ) or die "read(): $!";
-
-        #$self->_consume_control( $msg );
+    while ( -1 == index($line, $CRLF) ) {
+#print "$$ getting line part ($line)\n";
+        $line .= $self->getc();
     }
 
-    return substr(
-        substr( $self->{'_in'}, 0, 2 + $crlf_at, q<>),
-        0,
-        -2,
-    );
+    return substr( $line, 0, -2 );
 }
+
+#sub get_line {
+#    my ($self) = @_;
+#
+#    my $crlf_at;
+#
+#    while (1) {
+#        $crlf_at = index( $self->{'_in'}, $CRLF );
+#
+#        last if -1 != $crlf_at;
+#
+#        sysread( $self->{'_s'}, $self->{'_in'}, 512, length $self->{'_in'} ) or die "read(): $!";
+#
+#        #$self->_consume_control( $msg );
+#    }
+#
+#    return substr(
+#        substr( $self->{'_in'}, 0, 2 + $crlf_at, q<>),
+#        0,
+#        -2,
+#    );
+#}
 
 sub harvest_control {
     my ($self) = @_;

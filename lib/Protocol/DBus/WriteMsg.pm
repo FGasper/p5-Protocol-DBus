@@ -16,7 +16,7 @@ sub DESTROY {
 
     my $fh = delete $fh_fds{ $self->get_write_fh() };
 
-    $self->SUPER::DESTROY();
+    $self->SUPER::DESTROY() if IO::Framed::Write->can('DESTROY');
 
     return;
 }

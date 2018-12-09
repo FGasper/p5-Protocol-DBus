@@ -49,8 +49,6 @@ sub _run {
 
             $client_cr->($cln);
 
-            sleep 60;
-
             1;
         };
         warn if !$ok;
@@ -69,7 +67,9 @@ sub _run {
 
             $server_cr->($dbsrv);
 
-            kill 'TERM', $client_pid;
+            note "$$: server logic ended";
+
+            1;
         };
         warn if !$ok;
 
@@ -84,6 +84,8 @@ sub _run {
         for my $pid (keys %wait) {
             if ( waitpid $pid, 1 ) {
                 diag "PID $pid ($wait{$pid}) ended.";
+                warn "… but in error!! ($?)" if $?;
+
                 delete $wait{$pid};
             }
         }
