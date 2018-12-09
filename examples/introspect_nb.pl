@@ -39,7 +39,7 @@ while (!$dbus->do_authn()) {
     }
 }
 
-printf "done authn; connection name: \n", $dbus->get_connection_name();
+printf "done authn; connection name: %s\n", $dbus->get_connection_name();
 
 #----------------------------------------------------------------------
 
