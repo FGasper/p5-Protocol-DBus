@@ -22,7 +22,7 @@ my $dbus = Protocol::DBus::Client->new(
     socket => $s,
 );
 
-$dbus->do_authn();
+$dbus->initialize();
 
 my $got_response;
 

@@ -17,7 +17,7 @@ my $dbus = Protocol::DBus::Client::system();
 
 $dbus->preserve_variant_signatures(1);
 
-$dbus->do_authn();
+$dbus->initialize();
 
 my $got_response;
 

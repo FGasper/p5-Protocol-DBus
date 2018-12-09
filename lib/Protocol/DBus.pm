@@ -17,7 +17,8 @@ Protocol::DBus - D-Bus in pure Perl
 
 For blocking I/O:
 
-    $dbus->do_authn();
+    # Authentication and “Hello” call/response:
+    $dbus->initialize();
 
     $dbus->send_call(
         path => '/org/freedesktop/DBus',
@@ -41,8 +42,8 @@ For non-blocking I/O:
     # the following is just for demonstration:
     vec( my $mask, $fileno, 1 ) = 1;
 
-    while (!$dbus->do_authn()) {
-        if ($dbus->authn_pending_send()) {
+    while (!$dbus->initialize()) {
+        if ($dbus->init_pending_send()) {
             select( undef, my $wout = $mask, undef, undef );
         }
         else {

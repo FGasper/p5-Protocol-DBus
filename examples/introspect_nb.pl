@@ -30,8 +30,8 @@ my $fileno = $dbus->fileno();
 # the following is quick and easy:
 vec( my $mask, $fileno, 1 ) = 1;
 
-while (!$dbus->do_authn()) {
-    if ($dbus->authn_pending_send()) {
+while (!$dbus->initialize()) {
+    if ($dbus->init_pending_send()) {
         select( undef, my $wout = $mask, undef, undef );
     }
     else {

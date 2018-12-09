@@ -19,7 +19,7 @@ my $authenticated = AnyEvent->condvar;
 my $w;
 $w = AnyEvent->io(fh => $dbus->fileno(), poll => 'rw',
       cb => sub {
-         if ($dbus->do_authn()) {
+         if ($dbus->initialize()) {
             $authenticated->send();
             undef $w;
          }

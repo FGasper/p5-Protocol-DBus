@@ -20,7 +20,7 @@ my $dbus = Protocol::DBus::Client::system();
 
 # $dbus->big_endian(1);
 
-$dbus->do_authn();
+$dbus->initialize();
 
 my $signal_name = 'ProtocolDBusFDPass';
 
@@ -42,7 +42,7 @@ my $recv_name = $dbus->get_connection_name();
 my $pid = fork or do {
     my $dbus = Protocol::DBus::Client::system();
 
-    $dbus->do_authn();
+    $dbus->initialize();
 
     pipe( my $r, my $w );
 

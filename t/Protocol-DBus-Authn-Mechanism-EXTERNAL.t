@@ -15,6 +15,8 @@ use ClientServer;
 use Protocol::DBus::Client;
 use Protocol::DBus::Peer;
 
+my $CLIENT_NAME = '1:1.1421';
+
 my $client_cr = sub {
     my ($cln) = @_;
 
@@ -23,13 +25,29 @@ my $client_cr = sub {
         authn_mechanism => 'EXTERNAL',
     );
 
-    print "$$: Sending client authn\n";
+    $client->initialize();
 
-    $client->do_authn();
+    ok( $client->get_connection_name(), 'Connection name is set after initialize()' );
 
-    ok( $client->get_connection_name(), 'connection name is set after authn' );
+    my $msg = $client->get_message();
 
-    print "$$: Done with client authn\n";
+    cmp_deeply(
+        $msg,
+        all(
+            Isa('Protocol::DBus::Message'),
+            methods(
+                [ type_is => 'SIGNAL' ] => 1,
+                [ get_header => 'PATH' ] => '/org/freedesktop/DBus',
+                [ get_header => 'INTERFACE' ] => 'org.freedesktop.DBus',
+                [ get_header => 'MEMBER' ] => 'NameAcquired',
+                [ get_header => 'DESTINATION' ] => $CLIENT_NAME,
+                [ get_header => 'SENDER' ] => 'org.freedesktop.DBus',
+                [ get_header => 'SIGNATURE' ] => 's',
+                get_body => [$CLIENT_NAME],
+            ),
+        ),
+        'Client received “NameAcquired” message via get_message()',
+    );
 };
 
 sub _server_finish_authn {
@@ -37,7 +55,7 @@ sub _server_finish_authn {
 
     my $line = $dbsrv->get_line();
 
-    is( $line, 'BEGIN', 'last line: BEGIN' );
+    is( $line, 'BEGIN', 'Client sent last line: BEGIN' );
 
     my $srv = Protocol::DBus::Peer->new( $dbsrv->socket() );
 
@@ -56,15 +74,26 @@ sub _server_finish_authn {
                 get_body => undef,
             ),
         ),
-        '“Hello” message sent',
+        'Client sent “Hello” message',
+    );
+
+    # Test that the client receives this message from get_message().
+    $srv->send_signal(
+        path => '/org/freedesktop/DBus',
+        interface => 'org.freedesktop.DBus',
+        member => 'NameAcquired',
+        destination => $CLIENT_NAME,
+        sender => 'org.freedesktop.DBus',
+        signature => 's',
+        body => [$CLIENT_NAME],
     );
 
     $srv->send_return(
         $hello,
-        destination => ':1.1421',
+        destination => $CLIENT_NAME,
         sender => 'org.freedesktop.DBus',
         signature => 's',
-        body => [':1.1421'],
+        body => [$CLIENT_NAME],
     );
 
     return;

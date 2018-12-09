@@ -15,7 +15,7 @@ use Protocol::DBus::Client;
 
 my $dbus = Protocol::DBus::Client::system();
 
-$dbus->do_authn();
+$dbus->initialize();
 
 # Wait for the initial hello acknowledgement
 # so we know our connnection name.

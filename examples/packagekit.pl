@@ -13,7 +13,7 @@ use Protocol::DBus::Client;
 
 my $dbus = Protocol::DBus::Client::system();
 
-$dbus->do_authn();
+$dbus->initialize();
 
 $dbus->get_message();
 

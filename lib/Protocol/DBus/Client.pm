@@ -13,7 +13,7 @@ Protocol::DBus::Client
 
     my $dbus = Protocol::DBus::Client::system();
 
-    $dbus->do_authn();
+    $dbus->initialize();
 
 =head1 DESCRIPTION
 
@@ -83,16 +83,20 @@ sub _create_local {
 
 =head1 METHODS
 
-=head2 $done_yn = I<OBJ>->do_authn()
+=head2 $done_yn = I<OBJ>->initialize()
 
 This returns truthy once the connection is ready to use and falsy until then.
 In blocking I/O contexts the call will block.
 
 Note that this includes the initial C<Hello> message and its response.
 
+Previously this function was called C<do_authn()> and did not wait for
+the C<Hello> message’s response. The older name is retained
+as an alias for backward compatibility.
+
 =cut
 
-sub do_authn {
+sub initialize {
     my ($self) = @_;
 
     if ($self->{'_authn'}->go()) {
@@ -124,26 +128,35 @@ sub do_authn {
     return 0;
 }
 
+*do_authn = \*initialize;
+
 #----------------------------------------------------------------------
 
-=head2 $yn = I<OBJ>->authn_pending_send()
+=head2 $yn = I<OBJ>->init_pending_send()
 
-This indicates whether there is data queued up to send for the authn.
+This indicates whether there is data queued up to send for the initialization.
 Only useful with non-blocking I/O.
+
+This function was previously called C<authn_pending_send()>; the former
+name is retained for backward compatibility.
 
 =cut
 
-sub authn_pending_send {
+sub init_pending_send {
     my ($self) = @_;
 
-    if (!$self->{'_connection_name'}) {
-        if ($self->{'_sent_hello'}) {
-            return $self->pending_send();
-        }
+    if ($self->{'_connection_name'}) {
+        die "Don’t call this after initialize() is done!";
+    }
+
+    if ($self->{'_sent_hello'}) {
+        return $self->pending_send();
     }
 
     return $self->{'_authn'}->pending_send();
 }
+
+*authn_pending_send = \*init_pending_send;
 
 #----------------------------------------------------------------------
 
@@ -171,7 +184,7 @@ its response are abstracted
 sub get_message {
     my ($self) = @_;
 
-    die "Authn is not finished!" if !$self->{'_connection_name'};
+    die "initialize() is not finished!" if !$self->{'_connection_name'};
 
     if ($self->{'_pending_received_messages'} && @{ $self->{'_pending_received_messages'} }) {
         return shift @{ $self->{'_pending_received_messages'} };
@@ -193,7 +206,7 @@ sub get_connection_name {
     return $_[0]->{'_connection_name'} || die 'No connection name known yet!';
 }
 
-# undocumented
+# undocumented for now
 sub new {
     my ($class, %opts) = @_;
 
