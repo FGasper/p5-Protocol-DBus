@@ -136,6 +136,10 @@ sub go {
 
                     die "Exhausted all authentication mechanisms! (@{ $self->{'_tried_mechanism'} })";
                 }
+                else {
+                    local $@ = $err;
+                    die;
+                }
             }
 
             return 1;
