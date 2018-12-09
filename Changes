@@ -1,5 +1,11 @@
 Revision history for Perl module Protocol::DBus
 
+0.07
+- Changed do_authn() to return falsy until the Hello response arrives back.
+  I don’t believe this is a breaking change, but it does remove the condition
+  where authn is done but the connection name is not yet established.
+- Added DBUS_COOKIE_SHA1 authentication support.
+
 0.06 Sat 1 Dec 2018
 - Socket::MsgHdr is no longer required.
 - BREAKING CHANGE: Socket::MsgHdr must now be loaded prior to D-Bus

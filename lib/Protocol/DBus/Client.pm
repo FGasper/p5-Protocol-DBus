@@ -85,8 +85,10 @@ sub _create_local {
 
 =head2 $done_yn = I<OBJ>->do_authn()
 
-This returns truthy once the authn is complete and falsy until then.
-In blocking I/O contexts the call will block until authn is complete.
+This returns truthy once the connection is ready to use and falsy until then.
+In blocking I/O contexts the call will block.
+
+Note that this includes the initial C<Hello> message and its response.
 
 =cut
 
@@ -183,8 +185,7 @@ sub get_message {
 
 =head2 $name = I<OBJ>->get_connection_name()
 
-Returns the name of the connection. This must only be called after at least
-one message is received; if it is called before then, an exception is thrown.
+Returns the name of the connection.
 
 =cut
 
