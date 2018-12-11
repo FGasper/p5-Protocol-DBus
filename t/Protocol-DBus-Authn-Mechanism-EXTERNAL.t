@@ -15,6 +15,14 @@ use ClientServer;
 use Protocol::DBus::Client;
 use Protocol::DBus::Peer;
 
+use Protocol::DBus::Authn::Mechanism::EXTERNAL;
+
+my $need_socket_msghdr = Protocol::DBus::Authn::Mechanism::EXTERNAL->new()->must_send_initial();
+
+if ($need_socket_msghdr && !ClientServer::can_socket_msghdr()) {
+    plan skip_all => "This OS ($^O) needs Socket::MsgHdr to do EXTERNAL authentication.";
+}
+
 my $CLIENT_NAME = '1:1.1421';
 
 my $client_cr = sub {

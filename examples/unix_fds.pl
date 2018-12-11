@@ -16,7 +16,7 @@ use lib "$FindBin::Bin/../lib";
 
 use Protocol::DBus::Client;
 
-my $dbus = Protocol::DBus::Client::system();
+my $dbus = $> ? Protocol::DBus::Client::login_session() ? Protocol::DBus::Client::system();
 
 # $dbus->big_endian(1);
 
@@ -40,7 +40,7 @@ $dbus->get_message();
 my $recv_name = $dbus->get_connection_name();
 
 my $pid = fork or do {
-    my $dbus = Protocol::DBus::Client::system();
+    my $dbus = my $dbus = $> ? Protocol::DBus::Client::login_session() ? Protocol::DBus::Client::system();
 
     $dbus->initialize();
 

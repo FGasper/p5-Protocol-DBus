@@ -7,34 +7,41 @@ use parent 'Protocol::DBus::Authn::Mechanism';
 
 use Protocol::DBus::Socket ();
 
+# The methods of user credential retrieval that the reference D-Bus
+# server relies on prefer “out-of-band” methods like SO_PEERCRED
+# on Linux rather than SCM_CREDS. (See See dbus/dbus-sysdeps-unix.c.)
+# So for some OSes it’s just not necessary to do anything special to
+# send credentials.
+#
+# On other OSes it’s just not possible to send credentials via a
+# UNIX socket in the first place.
+#
+our @OS_NO_MSGHDR_LIST = (
+
+    # Reference server doesn’t need our help:
+    'linux',
+    'netbsd',
+
+    # 'openbsd', ??? Still trying to test.
+
+    # No way to pass credentials via UNIX socket anyway:
+    'cygwin',
+    'darwin',
+);
+
 sub INITIAL_RESPONSE { unpack 'H*', $> }
 
 # The reference server implementation does a number of things to try to
-# fetch the peer credentials. See dbus/dbus-sysdeps-unix.c.
+# fetch the peer credentials. .
 sub must_send_initial {
     my ($self) = @_;
 
     if (!defined $self->{'_must_send_initial'}) {
 
-        # On Linux this module doesn’t need to make any special
-        # effort to send credentials because the server will request them on
-        # its own, and SO_PASSCRED works independently of the client anyway.
-        # (Although Linux only sends the real credentials, we’ll send the
-        # EUID in the AUTH line.)
-        #
-        # As it happens, though, the reference implementation uses
-        # SO_PEERCRED on Linux anyway, as well as OpenBSD. It also
-        # tries LOCAL_PEEREID for NetBSD, getpeerucred() for Solaris,
-        # and getpeereid() as a fallback. Only FreeBSD & DragonflyBSD
-        # appear to be expected to send SCM_CREDS directly, even though
-        # those OSes do have LOCAL_PEERCRED which should work.
-        #
-        my $can_skip_msghdr = eval { my $v = Socket::SO_PEERCRED(); 1 };
-        $can_skip_msghdr ||= eval { my $v = Socket::LOCAL_PEEREID(); 1 };
+        my $can_skip_msghdr = grep { $_ eq $^O } @OS_NO_MSGHDR_LIST;
 
-        # macOS can’t send SCM_CREDS, despite that the constants
-        # are defined.
-        $can_skip_msghdr ||= ($^O eq 'darwin');
+        $can_skip_msghdr ||= eval { my $v = Socket::SO_PEERCRED(); 1 };
+        $can_skip_msghdr ||= eval { my $v = Socket::LOCAL_PEEREID(); 1 };
 
         $self->{'_must_send_initial'} = !$can_skip_msghdr;
     }
@@ -46,7 +53,7 @@ sub send_initial {
     my ($self, $s) = @_;
 
     eval { require Socket::MsgHdr; 1 } or do {
-        die "Socket::MsgHdr appears to be needed for EXTERNAL authn but failed to load: $@";
+        die "Socket::MsgHdr appears to be needed for EXTERNAL authn (OS=$^O) but failed to load: $@";
     };
 
     my $msg = Socket::MsgHdr->new( buf => "\0" );
