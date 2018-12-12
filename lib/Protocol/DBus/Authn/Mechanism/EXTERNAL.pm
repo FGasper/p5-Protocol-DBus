@@ -25,7 +25,8 @@ our @OS_NO_MSGHDR_LIST = (
     # LOCAL_PEERCRED exists and works, but the reference server
     # doesn’t appear to use it. Nonetheless, EXTERNAL authn works
     # on these OSes. Maybe getpeereid() calls LOCAL_PEERCRED?
-    'freebsd',  # NB: doesn’t work w/ socketpair()
+    'freebsd',      # NB: doesn’t work w/ socketpair()
+    'gnukfreebsd',  # ditto, probably
     'darwin',
 
     # 'openbsd', ??? Still trying to test.
