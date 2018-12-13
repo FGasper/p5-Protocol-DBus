@@ -12,7 +12,7 @@ use Data::Dumper;
 use Protocol::DBus;
 use Protocol::DBus::Client;
 
-my $dbus = $> ? Protocol::DBus::Client::login_session() ? Protocol::DBus::Client::system();
+my $dbus = $> ? Protocol::DBus::Client::login_session() : Protocol::DBus::Client::system();
 $dbus->blocking(0);
 
 my $authenticated = AnyEvent->condvar;

@@ -13,7 +13,7 @@ use lib "$FindBin::Bin/../lib";
 
 use Protocol::DBus::Client;
 
-my $dbus = $> ? Protocol::DBus::Client::login_session() ? Protocol::DBus::Client::system();
+my $dbus = $> ? Protocol::DBus::Client::login_session() : Protocol::DBus::Client::system();
 
 $SIG{'PIPE'} = 'IGNORE';
 
