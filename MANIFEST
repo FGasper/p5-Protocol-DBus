@@ -47,5 +47,6 @@ t/Protocol-DBus-Marshal.t
 t/Protocol-DBus-Message.t
 t/Protocol-DBus-Parser-UnixFDs.t
 t/Protocol-DBus-Signature.t
+t/integration.t
 t/lib/ClientServer.pm
 t/lib/MockDBusServer.pm
