@@ -45,7 +45,7 @@ isa_ok( $cln, 'GLOB', 'create_socket() creates a filehandle' );
 SKIP: {
     my $peername = getpeername($cln);
 
-    skip "Your OS ($^O) doesn’t report getpeername() … ?" if !$peername;
+    skip "Your OS ($^O) doesn’t report getpeername() … ?", 1 if !$peername;
 
     my $peerpath = Socket::unpack_sockaddr_un($peername);
 
