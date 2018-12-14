@@ -44,6 +44,7 @@ sub _set_mechanism {
 
         my $err = $@;
         if (!eval { Module::Load::load($module); 1 } ) {
+            DEBUG && print STDERR "Failed to load $mechanism authn module: $@";
             return 0;
         }
         $@ = $err;

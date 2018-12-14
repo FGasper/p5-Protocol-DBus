@@ -59,7 +59,7 @@ SKIP: {
     }
 
     system( $bin, '--', $^X, '-MProtocol::DBus::Client', -e => 'Protocol::DBus::Client->login_session()->initialize()' );
-    ok( !$?, 'login session bus connected!' ) or diag $env;
+    ok( !$?, 'login session bus connected' ) or diag $env;
 }
 
 #----------------------------------------------------------------------
