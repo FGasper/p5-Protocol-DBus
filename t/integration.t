@@ -53,13 +53,13 @@ SKIP: {
         skip 'No dbus-run-session', 1;
     };
 
-    system($bin, '--', $^X, '-MData::Dumper', -e => '$Data::Dumper::Sortkeys = 1; print Dumper \%ENV');
+    my $env = readpipe("$bin -- $^X -MData::Dumper -e '\$Data::Dumper::Sortkeys = 1; print Dumper \\\%ENV'");
     if ($?) {
         skip 'dbus-run-session exited nonzero', 1;
     }
 
     system( $bin, '--', $^X, '-MProtocol::DBus::Client', -e => 'Protocol::DBus::Client->login_session()->initialize()' );
-    ok( !$?, 'login session bus connected!' );
+    ok( !$?, 'login session bus connected!' ) or diag $env;
 }
 
 #----------------------------------------------------------------------
