@@ -38,6 +38,7 @@ WriteMakefile1(
     TEST_REQUIRES => {
         'autodie'         => 0,
         'FindBin'         => 0,
+        'File::Which'     => 0,
         'Test::Exception' => 0,
         'Test::More'      => 0,
         'Test::Deep' => 0,
