@@ -6,6 +6,8 @@ use warnings;
 use constant INITIAL_RESPONSE => ();
 use constant AFTER_AUTH => ();
 
+use constant on_rejected => ();
+
 sub new {
     my $self = bless {}, shift;
 

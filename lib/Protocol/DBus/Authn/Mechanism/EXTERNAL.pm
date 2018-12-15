@@ -13,20 +13,15 @@ use Protocol::DBus::Socket ();
 # So for some OSes it’s just not necessary to do anything special to
 # send credentials.
 #
-# On other OSes it doesn’t seem possible to send credentials via a
-# UNIX socket in the first place. But let’s still try.
+# This list is exposed for the sake of tests.
 #
-our @OS_NO_MSGHDR_LIST = (
+our @_OS_NO_MSGHDR_LIST = (
 
     # Reference server doesn’t need our help:
     'linux',
     'netbsd',   # via LOCAL_PEEREID, which dbus calls
 
-    # LOCAL_PEERCRED exists and works, but the reference server
-    # doesn’t appear to use it. Nonetheless, EXTERNAL authn works
-    # on these OSes. Maybe getpeereid() calls LOCAL_PEERCRED?
-    'freebsd',      # NB: doesn’t work w/ socketpair()
-    'gnukfreebsd',  # ditto, probably
+    # MacOS works, though … ??
     'darwin',
 
     # 'openbsd', ??? Still trying to test.
@@ -47,10 +42,18 @@ sub must_send_initial {
 
     if (!defined $self->{'_must_send_initial'}) {
 
-        my $can_skip_msghdr = grep { $_ eq $^O } @OS_NO_MSGHDR_LIST;
+        my $can_skip_msghdr = grep { $_ eq $^O } @_OS_NO_MSGHDR_LIST;
 
         $can_skip_msghdr ||= eval { my $v = Socket::SO_PEERCRED(); 1 };
         $can_skip_msghdr ||= eval { my $v = Socket::LOCAL_PEEREID(); 1 };
+
+        if (!$can_skip_msghdr) {
+            eval { require Socket::MsgHdr; 1 } or do {
+                $self->{'_failed_socket_msghdr'} = $@;
+            };
+
+            $can_skip_msghdr = 1;
+        }
 
         # As of this writing it seems FreeBSD and DragonflyBSD do require
         # Socket::MsgHdr, even though they both have LOCAL_PEERCRED which
@@ -61,12 +64,18 @@ sub must_send_initial {
     return $self->{'_must_send_initial'};
 }
 
+sub on_rejected {
+    my ($self) = @_;
+
+    if ($self->{'_failed_socket_msghdr'}) {
+        warn "EXTERNAL authentication failed. Socket::MsgHdr failed to load earlier; maybe making it available would fix this? (Load failure was: $@)";
+    }
+
+    return;
+}
+
 sub send_initial {
     my ($self, $s) = @_;
-
-    eval { require Socket::MsgHdr; 1 } or do {
-        die "Socket::MsgHdr appears to be needed for EXTERNAL authn (OS=$^O) but failed to load: $@";
-    };
 
     my $msg = Socket::MsgHdr->new( buf => "\0" );
 

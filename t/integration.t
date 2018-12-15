@@ -7,9 +7,13 @@ use autodie;
 use Test::More;
 use Test::FailWarnings;
 
+use Protocol::DBus::Authn::Mechanism::EXTERNAL ();
+
 use File::Which;
 
 use Protocol::DBus::Client;
+
+my $no_msghdr_needed = grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
 
 my $dbus_send = File::Which::which('dbus-send');
 
@@ -27,7 +31,23 @@ SKIP: {
     };
 
     if ($dbus_send && $dbus_send_ok) {
-        ok( $client, 'dbus-send worked, and system()' );
+        if ($no_msghdr_needed) {
+            ok( $client, 'dbus-send worked, and system()' );
+        }
+        else {
+            my $smh_loaded_yn = $INC{'Socket/MsgHdr.pm'} ? 'y' : 'n';
+
+            my $msg;
+
+            if ($client) {
+                $msg = "system() worked";
+            }
+            else {
+                $msg = "system() failed ($@)";
+            }
+
+            skip "$msg (S::MH loaded? $smh_loaded_yn)", 1;
+        }
     }
     else {
         my $reason;
@@ -58,8 +78,23 @@ SKIP: {
         skip 'dbus-run-session exited nonzero', 1;
     }
 
-    system( $bin, '--', $^X, '-MProtocol::DBus::Client', -e => 'Protocol::DBus::Client->login_session()->initialize()' );
-    ok( !$?, 'login session bus connected!' ) or diag $env;
+    my $loaded_smh = readpipe( qq[$bin -- $^X -MProtocol::DBus::Client -e 'Protocol::DBus::Client->login_session()->initialize(); print \$INC{"Socket/MsgHdr.pm"} ? "y" : "n"'] );
+
+    if ($no_msghdr_needed) {
+        ok( !$?, 'login session bus connected!' ) or diag $env;
+    }
+    else {
+        my $msg;
+
+        if ($?) {
+            $msg = "login_session() failed";
+        }
+        else {
+            $msg = "login_session() worked";
+        }
+
+        skip "$msg (S::MH loaded? $loaded_smh)", 1;
+    }
 }
 
 #----------------------------------------------------------------------

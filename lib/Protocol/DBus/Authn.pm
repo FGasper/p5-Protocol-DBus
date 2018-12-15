@@ -120,6 +120,9 @@ sub go {
             if (!$ok) {
                 my $err = $@;
                 if (eval { $err->isa('Protocol::DBus::X::Rejected') }) {
+
+                    $self->{'_mechanism'}->on_rejected();
+
                     my @to_try;
 
                     for my $mech ( @{ $err->get('mechanisms') } ) {

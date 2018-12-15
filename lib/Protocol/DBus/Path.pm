@@ -11,7 +11,25 @@ use constant _DEFAULT_SYSTEM_MESSAGE_BUS => 'unix:path=/var/run/dbus/system_bus_
 # platform-specific methods of locating a running D-Bus session server,
 # or starting one if a running instance cannot be found.
 sub login_session_message_bus {
-    return Protocol::DBus::Address::parse($ENV{'DBUS_SESSION_BUS_ADDRESS'});
+    my $addr = $ENV{'DBUS_SESSION_BUS_ADDRESS'};
+
+    if (!$addr && ($^O eq 'darwin')) {
+        my $path = $ENV{'DBUS_LAUNCHD_SESSION_BUS_SOCKET'};
+
+        # OK, let’s *really* stretch …
+        $path ||= readpipe( "launchctl getenv DBUS_LAUNCHD_SESSION_BUS_SOCKET" );
+        chomp $path;
+
+        if ($path) {
+            chomp $path;
+
+            $addr = "unix:path=$path";
+        }
+    }
+
+    die "Found no login session message bus address!" if !$addr;
+
+    return Protocol::DBus::Address::parse($addr);
 }
 
 sub system_message_bus {
