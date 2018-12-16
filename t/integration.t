@@ -32,6 +32,8 @@ use Protocol::DBus::Client;
     }
 
     my $client = eval {
+        local $SIG{'__WARN__'} = sub { diag shift() };
+
         my $db = Protocol::DBus::Client->system();
         $db->initialize();
         $db;
