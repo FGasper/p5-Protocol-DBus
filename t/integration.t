@@ -13,57 +13,35 @@ use File::Which;
 
 use Protocol::DBus::Client;
 
-my $no_msghdr_needed = grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
+{
+    #----------------------------------------------------------------------
+    # This test can’t work without XS because the location of D-Bus’s
+    # system socket is hard-coded in libdbus at compile time.
+    #
+    # It’s still a useful diagnostic, though.
+    #----------------------------------------------------------------------
 
-my $dbus_send = File::Which::which('dbus-send');
+    my $dbus_send = File::Which::which('dbus-send');
 
-SKIP: {
-    my $dbus_send_ok = $dbus_send && do {
-        my $out = readpipe("$dbus_send --print-reply --system --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.Properties.GetAll string:org.freedesktop.DBus");
+    diag( "dbus-send: " . ($dbus_send || '(none)') );
 
-        !$?;
-    };
+    if ($dbus_send) {
+        system($dbus_send, '--type=method_call', '--system', '--dest=org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus.Properties.GetAll', 'string:org.freedesktop.DBus');
+
+        diag( "dbus-send --system worked? " . ($? ? 'no' : 'yes') );
+    }
 
     my $client = eval {
         my $db = Protocol::DBus::Client->system();
         $db->initialize();
         $db;
     };
+    my $err = $@;
 
-    if ($dbus_send && $dbus_send_ok) {
-        if ($no_msghdr_needed) {
-            ok( $client, 'dbus-send worked, and system()' );
-        }
-        else {
-            my $smh_loaded_yn = $INC{'Socket/MsgHdr.pm'} ? 'y' : 'n';
+    diag( "Client::system() worked? " . ($client ? 'yes' : 'no') );
+    diag $err if !$client;
 
-            my $msg;
-
-            if ($client) {
-                $msg = "system() worked";
-            }
-            else {
-                $msg = "system() failed ($@)";
-            }
-
-            skip "$msg (S::MH loaded? $smh_loaded_yn)", 1;
-        }
-    }
-    else {
-        my $reason;
-
-        if ($client) {
-            $reason = "dbus-send failed, but system() worked.";
-        }
-        elsif (!$dbus_send) {
-            $reason = "No dbus-send, and system() failed.";
-        }
-        else {
-            $reason = "dbus-send exists but failed, and system() failed.";
-        }
-
-        skip $reason, 1;
-    }
+    diag( "Socket::MsgHdr loaded? " . ($INC{'Socket/MsgHdr.pm'} ? 'yes' : 'no') );
 }
 
 #----------------------------------------------------------------------
@@ -79,6 +57,8 @@ SKIP: {
     }
 
     my $loaded_smh = readpipe( qq[$bin -- $^X -MProtocol::DBus::Client -e 'Protocol::DBus::Client->login_session()->initialize(); print \$INC{"Socket/MsgHdr.pm"} ? "y" : "n"'] );
+
+    my $no_msghdr_needed = grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
 
     if ($no_msghdr_needed) {
         ok( !$?, 'login session bus connected!' ) or diag $env;
