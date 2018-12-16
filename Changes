@@ -10,6 +10,8 @@ Revision history for Perl module Protocol::DBus
 - Added DBUS_COOKIE_SHA1 authentication support.
 - Implement fallback when server indicates authn mechanisms
   besides EXTERNAL.
+- EXTERNAL authn now attempts to auto-load Socket::MsgHdr except on
+  OSes (e.g., Linux, Cygwin) where it’s known not to make a difference.
 - Fix parsing of DBus addresses
 
 0.06 Sat 1 Dec 2018
