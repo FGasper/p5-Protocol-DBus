@@ -68,7 +68,7 @@ sub on_rejected {
     my ($self) = @_;
 
     if ($self->{'_failed_socket_msghdr'}) {
-        warn "EXTERNAL authentication failed. Socket::MsgHdr failed to load earlier; maybe making it available would fix this? (Load failure was: $@)";
+        warn "EXTERNAL authentication failed. Socket::MsgHdr failed to load earlier; maybe making it available would fix this? (Load failure was: $self->{'_failed_socket_msghdr'})";
     }
 
     return;
