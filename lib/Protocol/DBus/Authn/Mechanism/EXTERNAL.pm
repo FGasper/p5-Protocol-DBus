@@ -48,11 +48,15 @@ sub must_send_initial {
         $can_skip_msghdr ||= eval { my $v = Socket::LOCAL_PEEREID(); 1 };
 
         if (!$can_skip_msghdr) {
-            eval { require Socket::MsgHdr; 1 } or do {
-                $self->{'_failed_socket_msghdr'} = $@;
+            my $ok = eval {
+                require Socket::MsgHdr;
+                Socket::MsgHdr->VERSION(0.05);
             };
 
-            $can_skip_msghdr = 1;
+            if (!$ok) {
+                $self->{'_failed_socket_msghdr'} = $@;
+                $can_skip_msghdr = 1;
+            }
         }
 
         # As of this writing it seems FreeBSD and DragonflyBSD do require

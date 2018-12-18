@@ -109,6 +109,7 @@ sub _server_finish_authn {
 
 my @tests = (
     {
+        skip_if => sub { $INC{'Socket/MsgHdr.pm'} && 'Socket::MsgHdr is already loaded.' },
         label => 'without unix fd',
         client => $client_cr,
         server => sub {

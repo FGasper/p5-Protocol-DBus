@@ -19,7 +19,12 @@ sub do_tests {
         note '-----------------------';
         note "TEST: $label";
 
-        _run( $client_cr, $server_cr );
+        if (my $skip_why = $t->{'skip_if'} && $t->{'skip_if'}->()) {
+            note "SKIPPING: $skip_why";
+        }
+        else {
+            _run( $client_cr, $server_cr );
+        }
     }
 
     return;
