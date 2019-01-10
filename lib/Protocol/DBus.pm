@@ -3,7 +3,7 @@ package Protocol::DBus;
 use strict;
 use warnings;
 
-our $VERSION = '0.08-TRIAL1';
+our $VERSION = '0.08';
 
 =encoding utf8
 
