@@ -18,8 +18,7 @@ For blocking I/O:
         destination => 'org.freedesktop.DBus',
         signature => 's',
         body => [ 'org.freedesktop.DBus' ],
-        on_return => sub { my ($msg) = @_ },
-    );
+    )->then( sub { my $msg = shift; ..  } );
 
     my $msg = $dbus->get_message();
 
@@ -66,23 +65,35 @@ For non-blocking I/O:
 This is an original, pure-Perl implementation of client messaging logic for
 [the D-Bus protocol](https://dbus.freedesktop.org/doc/dbus-specification.html).
 
-This library doesn’t know about objects, services, or anything else besides
-the actual messages. If you want to deal with D-Bus’s actual object
-system—which you likely do if you’re building a real application—see
-["SEE ALSO"](#see-also) below.
+It’s not much more than an implementation of the wire protocol; it doesn’t
+know about objects, services, or anything else besides the actual messages.
+This is fine, of course, if all you want to do is, e.g., replace
+an invocation of `gdbus` or `dbus-send` with pure Perl.
 
-See [Protocol::DBus::Client](https://metacpan.org/pod/Protocol::DBus::Client) and the above sample for a starting point.
+If you want an interface that mimics D-Bus’s actual object system,
+you’ll need to implement it yourself or to look elsewhere.
+(See ["SEE ALSO"](#see-also) below.)
+
+# STATUS
+
+This project is in BETA status. While the API should be pretty stable now,
+breaking changes can still happen. If you use this module
+in your project, you **MUST** check the changelog before deploying a new
+version. Please file bug reports as appropriate.
 
 # EXAMPLES
 
-See the distribution’s `examples/` directory.
+See [Protocol::DBus::Client](https://metacpan.org/pod/Protocol::DBus::Client) and the above sample for a starting point.
+
+Also see the distribution’s `examples/` directory.
 
 # NOTES
 
 - UNIX FD support requires that [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) be loaded at
 authentication time.
 - Certain OSes may require [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) to function.
-(Linux, notably, does not.)
+(Linux, notably, does not.) It depends if your OS can send local socket
+credentials without recourse to `sendmsg(2)`.
 - EXTERNAL and DBUS\_COOKIE\_SHA1 authentication is supported.
 
 # TODO
@@ -95,7 +106,3 @@ authentication time.
 The most mature, stable D-Bus implementation in Perl is [Net::DBus](https://metacpan.org/pod/Net::DBus),
 an XS binding to [libdbus](https://www.freedesktop.org/wiki/Software/dbus/),
 the reference D-Bus implementation.
-
-There is also [App::DBus](https://metacpan.org/pod/App::DBus), which builds upon the present module.
-It’s pure Perl and takes a different approach to D-Bus’s object framework
-than Net::DBus.
