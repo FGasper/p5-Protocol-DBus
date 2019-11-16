@@ -280,4 +280,8 @@ sub new {
     return $self;
 }
 
+sub DESTROY {
+    print "DESTROYED: [$_[0]]\n";
+}
+
 1;

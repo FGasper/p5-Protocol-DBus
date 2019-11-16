@@ -3,6 +3,12 @@ package Protocol::DBus::Client::AnyEvent;
 use strict;
 use warnings;
 
+use constant _has_current_sub => $^V ge v5.16.0;
+
+use if _has_current_sub(), feature => 'current_sub';
+
+# XXX TODO: Needs a listener for unbidden errors.
+
 =encoding utf-8
 
 =head1 NAME
@@ -16,9 +22,11 @@ waits for their responses, then ends:
 
     use experimental 'signatures';
 
+    my $dbus = Protocol::DBus::Client::AnyEvent::system()
+
     my $cv = AnyEvent->condvar();
 
-    Protocol::DBus::Client::AnyEvent::system()->then(
+    $dbus->initialize()->then(
         sub ($dbus) {
             my $a = $dbus->send_call( .. )->then( sub ($resp) {
                 # ..
@@ -41,61 +49,96 @@ L<Protocol::DBus::Client>.
 
 =cut
 
+use parent qw( Protocol::DBus::Client::Async );
+
 use AnyEvent ();
 
-use Promise::ES6::AnyEvent ();
+use Promise::ES6 ();
 
 use Protocol::DBus::Client ();
+use Protocol::DBus::Client::AsyncMessenger ();
 
-sub system {
-    return _initialize(Protocol::DBus::Client::system());
-}
+#----------------------------------------------------------------------
 
-sub login_session {
-    return _initialize(Protocol::DBus::Client::login_session());
-}
+=head1 STATIC FUNCTIONS
+
+This module offers C<system()> and C<login_session()> functions that
+offer similar functionality to their analogues in
+L<Protocol::DBus::Client>, but they return instances of this class.
+
+=cut
+
+#----------------------------------------------------------------------
+
+=head1 INSTANCE METHODS
+
+=head2 $promise = I<OBJ>->initialize()
+
+Returns a promise (L<Promise::ES6> instance) that resolves to a
+L<Protocol::DBus::Client::AsyncMessenger> instance. That object is
+what you’ll use to send and receive messages.
+
+=cut
 
 sub _initialize {
-    my ($dbus) = @_;
+    my ($self, $y, $n) = @_;
 
-    $dbus->blocking(0);
+    my $dbus = $self->{'db'};
 
-    return Promise::ES6::AnyEvent->new( sub {
-        my ($y, $n) = @_;
+    my $fileno = $dbus->fileno();
 
-        my $fileno = $dbus->fileno();
+    my $read_watch_r = \do { $self->{'_read_watch'} = undef };
+    my $write_watch_r = \do { $self->{'_write_watch'} = undef };
 
-        my $watch;
+    my $cb;
+    $cb = sub {
+        if ( $dbus->initialize() ) {
+            undef $$read_watch_r;
+            undef $$write_watch_r;
+            $y->();
+        }
 
-        my $each_time;
-        $each_time = sub {
-            $watch = undef;
+        # It seems unlikely that we’d need a write watch here.
+        # But just in case …
+        elsif ($dbus->init_pending_send()) {
+            $$write_watch_r ||= do {
 
-            $n->($@) if !eval {
-                if ( $dbus->initialize() ) {
-                    $y->( __PACKAGE__->_new($dbus)->_set_watches() );
-                }
-                else {
-                    $watch = AnyEvent->io(
-                        fh => $fileno,
-                        poll => $dbus->init_pending_send() ? 'w' : 'r',
-                        cb => $each_time,
-                    );
-                }
+                # Accommodate Perl versions whose $@ handling is buggy
+                # by forgoing local():
+                my $old_err = $@;
 
-                1;
+                my $current_sub = do {
+                    no strict 'subs';
+
+                    # We can’t refer to $cb in the code or else
+                    # this will leak.
+                    _has_current_sub() ? __SUB__ : eval '$cb';
+                };
+
+                $@ = $old_err;
+
+                AnyEvent->io(
+                    fh => $fileno,
+                    poll => 'w',
+                    cb => $current_sub,
+                );
             };
-        };
+        }
+        else {
+            undef $$write_watch_r;
+        }
+    };
 
-        $each_time->();
-    } );
+    $$read_watch_r = AnyEvent->io(
+        fh => $fileno,
+        poll => 'r',
+        cb => $cb,
+    );
+
+    $cb->();
 }
 
-sub _new {
-    my ($class, $dbus) = @_;
-
-    return bless( { db => $dbus }, $class );
-}
+#----------------------------------------------------------------------
 
 sub _flush_send_queue {
     my ($dbus, $fileno, $watch_sr) = @_;
@@ -109,22 +152,6 @@ sub _flush_send_queue {
     }
 
     return;
-}
-
-sub send_call {
-    return _wrap_send( @_ );
-}
-
-sub send_return {
-    return _wrap_send( @_ );
-}
-
-sub send_error {
-    return _wrap_send( @_ );
-}
-
-sub send_signal {
-    return _wrap_send( @_ );
 }
 
 sub _wrap_send {
@@ -142,27 +169,33 @@ sub _wrap_send {
     return $ret;
 }
 
-sub _set_watches {
+sub _set_watches_and_create_messenger {
     my ($self) = @_;
 
     my $dbus = $self->{'db'};
 
     my $fileno = $dbus->fileno();
 
-    my $watch = undef;
-    _flush_send_queue( $dbus, $fileno, \$watch );
+    if (!$self->{'_read_watch'}) {
 
-    $self->{'_send_watch_ref'} = \$watch;
+        my $watch = undef;
+        _flush_send_queue( $dbus, $fileno, \$watch );
 
-    $self->{'_read_watch'} = AnyEvent->io(
-        fh => $fileno,
-        poll => 'r',
-        cb => sub {
-            1 while $dbus->get_message();
-        },
+        $self->{'_send_watch_ref'} = \$watch;
+
+        $self->{'_read_watch'} = AnyEvent->io(
+            fh => $fileno,
+            poll => 'r',
+            cb => $self->_create_get_message_callback($dbus, $self->{'_on_signal'}),
+        );
+    }
+
+    my $watch_sr = $self->{'_send_watch_ref'};
+
+    return $self->{'_messenger'} = Protocol::DBus::Client::AsyncMessenger->new(
+        $dbus,
+        sub { _flush_send_queue( $dbus, $fileno, $watch_sr ) },
     );
-
-    return $self;
 }
 
 1;
