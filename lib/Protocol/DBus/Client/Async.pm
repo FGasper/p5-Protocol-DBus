@@ -3,13 +3,26 @@ package Protocol::DBus::Client::Async;
 use strict;
 use warnings;
 
+=encoding utf-8
+
+=head1 NAME
+
+Protocol::DBus::Client::Async - Base class for event-driven L<Protocol::DBus>
+
+=head1 DESCRIPTION
+
+This base class encapsulates the fundamental functionality of 
+
+See end classes like L<Protocol::DBus::Client::IOAsync> or
+L<Protocol::DBus::Client::AnyEvent> for fuller 
+
 =head1 INSTANCE METHODS
 
 =head2 $promise = I<OBJ>->initialize()
 
 Returns a promise (L<Promise::ES6> instance) that resolves to a
-L<Protocol::DBus::Client::AsyncMessenger> instance. That object is
-what you’ll use to send and receive messages.
+L<Protocol::DBus::Client::AsyncMessenger> instance. That object, not
+this one, is what you’ll use to send and receive messages.
 
 =cut
 
