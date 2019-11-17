@@ -27,12 +27,12 @@ waits for their responses, then ends:
     my $cv = AnyEvent->condvar();
 
     $dbus->initialize()->then(
-        sub ($dbus) {
-            my $a = $dbus->send_call( .. )->then( sub ($resp) {
+        sub ($msgr) {
+            my $a = $msgr->send_call( .. )->then( sub ($resp) {
                 # ..
             } );
 
-            my $b = $dbus->send_call( .. )->then( sub ($resp) {
+            my $b = $msgr->send_call( .. )->then( sub ($resp) {
                 # ..
             } );
 
@@ -62,23 +62,21 @@ use Protocol::DBus::Client::AsyncMessenger ();
 
 =head1 STATIC FUNCTIONS
 
-This module offers C<system()> and C<login_session()> functions that
-offer similar functionality to their analogues in
-L<Protocol::DBus::Client>, but they return instances of this class.
+This module provides C<system()> and C<login_session()> functions
+that parallel their equivalents in L<Protocol::DBus::Client> but return
+an instance of this class instead.
 
 =cut
+
+sub system {
+    return __PACKAGE__->_create(Protocol::DBus::Client::system());
+}
+
+sub login_session {
+    return __PACKAGE__->_create(Protocol::DBus::Client::login_session());
+}
 
 #----------------------------------------------------------------------
-
-=head1 INSTANCE METHODS
-
-=head2 $promise = I<OBJ>->initialize()
-
-Returns a promise (L<Promise::ES6> instance) that resolves to a
-L<Protocol::DBus::Client::AsyncMessenger> instance. That object is
-what you’ll use to send and receive messages.
-
-=cut
 
 sub _initialize {
     my ($self, $y, $n) = @_;
@@ -186,7 +184,7 @@ sub _set_watches_and_create_messenger {
         $self->{'_read_watch'} = AnyEvent->io(
             fh => $fileno,
             poll => 'r',
-            cb => $self->_create_get_message_callback($dbus, $self->{'_on_signal'}),
+            cb => $self->_create_get_message_callback(),
         );
     }
 

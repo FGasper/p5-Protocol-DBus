@@ -45,6 +45,8 @@ L<Protocol::DBus::Client>.
 
 =cut
 
+use parent qw( Protocol::DBus::Client::Async );
+
 use Scalar::Util ();
 
 use IO::Async::Handle ();
@@ -58,26 +60,32 @@ use Protocol::DBus::Client::AsyncMessenger ();
 
 =head1 STATIC FUNCTIONS
 
+
 This module offers C<system()> and C<login_session()> functions that
 offer similar functionality to their analogues in
 L<Protocol::DBus::Client>, but they return instances of this class.
 
+Additionally, you B<must> pass an L<IO::Async::Loop> instance to either
+function.
+
 =cut
 
 sub system {
-    return _create(Protocol::DBus::Client::system(), $_[0]);
+    return __PACKAGE__->_create(Protocol::DBus::Client::system(), $_[0] );
 }
 
 sub login_session {
-    return _create(Protocol::DBus::Client::login_session(), $_[0]);
+    return __PACKAGE__->_create(Protocol::DBus::Client::login_session(), $_[0] );
 }
 
 sub _create {
-    $_[0]->blocking(0);
+    my ($class, $dbus, $loop) = @_;
 
-    open my $s, '+>&=' . $_[0]->fileno() or die "failed to dupe filehandle: $!";
+    die 'need loop!' if !$loop;
 
-    return bless( { db => $_[0], loop => $_[1], socket => $s }, __PACKAGE__ );
+    open my $s, '+>&=' . $dbus->fileno() or die "failed to dupe filehandle: $!";
+
+    return $class->SUPER::_create($dbus, loop => $loop, socket => $s);
 }
 
 #----------------------------------------------------------------------
@@ -92,56 +100,44 @@ what you’ll use to send and receive messages.
 
 =cut
 
-sub initialize {
-    my ($self) = @_;
+sub _initialize {
+    my ($self, $y, $n) = @_;
 
     my $dbus = $self->{'db'};
     my $loop = $self->{'loop'};
     my $s = $self->{'socket'};
 
-    return Promise::ES6->new( sub {
-        my ($y, $n) = @_;
+    my $weak_watch;
 
-        my $weak_watch;
+    my $each_time = sub {
+        $weak_watch->want_writeready(0);
 
-        my $each_time = sub {
-            $weak_watch->want_writeready(0);
+        $n->($@) if !eval {
+            if ( $dbus->initialize() ) {
+                $loop->remove($weak_watch);
+                $y->();
+            }
+            else {
+                $weak_watch->want_writeready( $dbus->init_pending_send() );
+            }
 
-            $n->($@) if !eval {
-                if ( $dbus->initialize() ) {
-                    $loop->remove($weak_watch);
-                    $y->( $self->_set_watches_and_create_messenger() );
-                }
-                else {
-                    $weak_watch->want_writeready( $dbus->init_pending_send() );
-                }
-
-                1;
-            };
+            1;
         };
+    };
 
-        my $watch = IO::Async::Handle->new(
-            handle => $s,
+    my $watch = IO::Async::Handle->new(
+        handle => $s,
 
-            on_read_ready => $each_time,
-            on_write_ready => $each_time,
-        );
+        on_read_ready => $each_time,
+        on_write_ready => $each_time,
+    );
 
-        # weaken() is needed to prevent a memory leak:
-        Scalar::Util::weaken($weak_watch = $watch);
+    # weaken() is needed to prevent a memory leak:
+    Scalar::Util::weaken($weak_watch = $watch);
 
-        $loop->add($watch);
+    $loop->add($watch);
 
-        $each_time->();
-    } );
-}
-
-sub on_signal {
-    my ($self, $cb) = @_;
-
-    $self->{'_on_signal'} = $cb;
-
-    return $self;
+    $each_time->();
 }
 
 #----------------------------------------------------------------------
@@ -157,9 +153,7 @@ sub _set_watches_and_create_messenger {
     my $watch = IO::Async::Handle->new(
         handle => $socket,
 
-        on_read_ready => sub {
-            1 while $dbus->get_message();
-        },
+        on_read_ready => $self->_create_get_message_callback(),
 
         on_write_ready => sub {
             $weak_watch->want_writeready(0) if $dbus->flush_write_queue();
@@ -172,22 +166,22 @@ sub _set_watches_and_create_messenger {
     # weaken() is needed to prevent a memory leak:
     Scalar::Util::weaken($weak_watch = $self->{'watch'});
 
-print "making messenger\n";
     return $self->{'_messenger'} = Protocol::DBus::Client::AsyncMessenger->new(
         $dbus,
         sub {
-print "after send\n";
             $watch->want_writeready( $dbus->pending_send() );
         },
     );
 }
 
+our @ISA;
+
 sub DESTROY {
-print "DESTROYING $_[0]\n";
     if (my $watch = delete $_[0]{'watch'}) {
-print "deleting\n";
         $_[0]{'loop'}->remove($watch);
     }
+
+    $_[0]->SUPER::DESTROY() if $ISA[0]->can('DESTROY');
 
     return;
 }
