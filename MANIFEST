@@ -25,8 +25,8 @@ lib/Protocol/DBus/Authn/Mechanism/DBUS_COOKIE_SHA1/Pieces.pm
 lib/Protocol/DBus/Authn/Mechanism/EXTERNAL.pm
 lib/Protocol/DBus/Client.pm
 lib/Protocol/DBus/Client/AnyEvent.pm
-lib/Protocol/DBus/Client/Async.pm
-lib/Protocol/DBus/Client/AsyncMessenger.pm
+lib/Protocol/DBus/Client/EventBase.pm
+lib/Protocol/DBus/Client/EventMessenger.pm
 lib/Protocol/DBus/Client/IOAsync.pm
 lib/Protocol/DBus/Connect.pm
 lib/Protocol/DBus/Marshal.pm

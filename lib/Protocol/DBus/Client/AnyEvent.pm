@@ -3,12 +3,6 @@ package Protocol::DBus::Client::AnyEvent;
 use strict;
 use warnings;
 
-use constant _has_current_sub => $^V ge v5.16.0;
-
-use if _has_current_sub(), feature => 'current_sub';
-
-# XXX TODO: Needs a listener for unbidden errors.
-
 =encoding utf-8
 
 =head1 NAME
@@ -45,18 +39,13 @@ waits for their responses, then ends:
 =head1 DESCRIPTION
 
 This module provides an L<AnyEvent> interface on top of
-L<Protocol::DBus::Client>.
+L<Protocol::DBus::Client>. It subclasses L<Protocol::DBus::Client::EventBase>.
 
 =cut
 
-use parent qw( Protocol::DBus::Client::Async );
+use parent qw( Protocol::DBus::Client::EventBase );
 
 use AnyEvent ();
-
-use Promise::ES6 ();
-
-use Protocol::DBus::Client ();
-use Protocol::DBus::Client::AsyncMessenger ();
 
 #----------------------------------------------------------------------
 
@@ -69,12 +58,20 @@ an instance of this class instead.
 =cut
 
 sub system {
-    return __PACKAGE__->_create(Protocol::DBus::Client::system());
+    return __PACKAGE__->_create_system();
 }
 
 sub login_session {
-    return __PACKAGE__->_create(Protocol::DBus::Client::login_session());
+    return __PACKAGE__->_create_login_session();
 }
+
+#----------------------------------------------------------------------
+
+=head1 SEE ALSO
+
+L<AnyEvent::DBus> is an AnyEvent wrapper for L<Net::DBus>.
+
+=cut
 
 #----------------------------------------------------------------------
 
@@ -88,9 +85,10 @@ sub _initialize {
     my $read_watch_r = \do { $self->{'_read_watch'} = undef };
     my $write_watch_r = \do { $self->{'_write_watch'} = undef };
 
-    my $cb;
-    $cb = sub {
+    my $cb_r;
+    my $cb = sub {
         if ( $dbus->initialize() ) {
+            undef $$cb_r;
             undef $$read_watch_r;
             undef $$write_watch_r;
             $y->();
@@ -101,19 +99,7 @@ sub _initialize {
         elsif ($dbus->init_pending_send()) {
             $$write_watch_r ||= do {
 
-                # Accommodate Perl versions whose $@ handling is buggy
-                # by forgoing local():
-                my $old_err = $@;
-
-                my $current_sub = do {
-                    no strict 'subs';
-
-                    # We can’t refer to $cb in the code or else
-                    # this will leak.
-                    _has_current_sub() ? __SUB__ : eval '$cb';
-                };
-
-                $@ = $old_err;
+                my $current_sub = $$cb_r;
 
                 AnyEvent->io(
                     fh => $fileno,
@@ -127,6 +113,8 @@ sub _initialize {
         }
     };
 
+    $cb_r = \$cb;
+
     $$read_watch_r = AnyEvent->io(
         fh => $fileno,
         poll => 'r',
@@ -135,8 +123,6 @@ sub _initialize {
 
     $cb->();
 }
-
-#----------------------------------------------------------------------
 
 sub _flush_send_queue {
     my ($dbus, $fileno, $watch_sr) = @_;
@@ -150,21 +136,6 @@ sub _flush_send_queue {
     }
 
     return;
-}
-
-sub _wrap_send {
-    my ($self) = @_;
-
-    my $fn = (caller 1)[3];
-    substr( $fn, 0, 1 + rindex($fn, ':') ) = q<>;
-
-    my $dbus = $self->{'db'};
-
-    my $ret = $dbus->$fn( @_[1 .. $#_] );
-
-    _flush_send_queue( $dbus, $dbus->fileno(), $self->{'_send_watch_ref'} );
-
-    return $ret;
 }
 
 sub _set_watches_and_create_messenger {
@@ -190,10 +161,7 @@ sub _set_watches_and_create_messenger {
 
     my $watch_sr = $self->{'_send_watch_ref'};
 
-    return $self->{'_messenger'} = Protocol::DBus::Client::AsyncMessenger->new(
-        $dbus,
-        sub { _flush_send_queue( $dbus, $fileno, $watch_sr ) },
-    );
+    return sub { _flush_send_queue( $dbus, $fileno, $watch_sr ) };
 }
 
 1;

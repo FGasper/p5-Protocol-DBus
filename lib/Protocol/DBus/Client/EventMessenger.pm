@@ -1,7 +1,19 @@
-package Protocol::DBus::Client::AsyncMessenger;
+package Protocol::DBus::Client::EventMessenger;
 
 use strict;
 use warnings;
+
+=encoding utf-8
+
+=head1 NAME
+
+Protocol::DBus::Client::EventMessenger - Messenger for
+L<Protocol::DBus::Client::EventBase> subclasses.
+
+=head1 DESCRIPTION
+
+This module is instantiated automatically by
+L<Protocol::DBus::Client::EventBase>.
 
 =head1 INSTANCE METHODS
 
