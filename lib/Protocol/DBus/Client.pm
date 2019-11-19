@@ -72,8 +72,6 @@ sub login_session {
 sub _create_local {
     my ($addr) = @_;
     my ($socket, $bin_addr) = Protocol::DBus::Connect::create_socket($addr);
-use Data::Dumper;
-print STDERR Dumper($socket, $bin_addr);
 
     return __PACKAGE__->new(
         socket => $socket,
