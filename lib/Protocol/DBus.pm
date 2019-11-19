@@ -13,9 +13,12 @@ Protocol::DBus - D-Bus in pure Perl
 
 =head1 SYNOPSIS
 
-    my $dbus = Protcol::DBus::Client::system();
+(NB: Examples below assume use of
+L<subroutine signatures|perlsub/Signatures>.)
 
 For blocking I/O:
+
+    my $dbus = Protcol::DBus::Client::system();
 
     # Authentication and “Hello” call/response:
     $dbus->initialize();
@@ -27,47 +30,28 @@ For blocking I/O:
         destination => 'org.freedesktop.DBus',
         signature => 's',
         body => [ 'org.freedesktop.DBus' ],
-    )->then( sub { my $msg = shift; ..  } );
+    )->then( sub ($msg) { .. } );
 
     my $msg = $dbus->get_message();
 
-For non-blocking I/O:
+For non-blocking I/O, it is recommended to use either
+L<Protocol::DBus::Client::IOAsync> (for L<IO::Async>) or
+L<Protocol::DBus::Client::AnyEvent> (for L<AnyEvent>).
 
-    $dbus->blocking(0);
+Example:
 
-    my $fileno = $dbus->fileno();
+    my $loop = IO::Async::Loop->new();
 
-    # You can use whatever polling method you prefer;
-    # the following is just for demonstration:
-    vec( my $mask, $fileno, 1 ) = 1;
+    Protcol::DBus::Client::IOAsync::login_session($loop)->then(
+        sub ($dbus) {
 
-    while (!$dbus->initialize()) {
-        if ($dbus->init_pending_send()) {
-            select( undef, my $wout = $mask, undef, undef );
-        }
-        else {
-            select( my $rout = $mask, undef, undef, undef );
-        }
-    }
+            # … Now use $dbus as in the blocking-I/O example.
+        },
+    )->finally( sub { $loop->stop() } );
 
-    $dbus->send_call( .. );     # same parameters as above
+    $loop->run();
 
-    while (1) {
-        my $wout = $dbus->pending_send() || q<>;
-        $wout &&= $mask;
-
-        select( my $rout = $mask, $wout, undef, undef );
-
-        if ($wout =~ tr<\0><>c) {
-            $dbus->flush_write_queue();
-        }
-
-        if ($rout =~ tr<\0><>c) {
-
-            # It’s critical to get_message() until undef is returned.
-            1 while $dbus->get_message();
-        }
-    }
+See below for an example using a manually-written event loop.
 
 =head1 DESCRIPTION
 
@@ -126,5 +110,47 @@ credentials without recourse to C<sendmsg(2)>.
 The most mature, stable D-Bus implementation in Perl is L<Net::DBus>,
 an XS binding to L<libdbus|https://www.freedesktop.org/wiki/Software/dbus/>,
 the reference D-Bus implementation.
+
+=head1 EXAMPLE USING MANUALLY-WRITTEN EVENT LOOP
+
+    my $dbus = Protcol::DBus::Client::system();
+
+    $dbus->blocking(0);
+
+    my $fileno = $dbus->fileno();
+
+    # You can use whatever polling method you prefer;
+    # the following is just for demonstration:
+    vec( my $mask, $fileno, 1 ) = 1;
+
+    while (!$dbus->initialize()) {
+        if ($dbus->init_pending_send()) {
+            select( undef, my $wout = $mask, undef, undef );
+        }
+        else {
+            select( my $rout = $mask, undef, undef, undef );
+        }
+    }
+
+    $dbus->send_call( .. );     # same parameters as above
+
+    while (1) {
+        my $wout = $dbus->pending_send() || q<>;
+        $wout &&= $mask;
+
+        select( my $rout = $mask, $wout, undef, undef );
+
+        if ($wout =~ tr<\0><>c) {
+            $dbus->flush_write_queue();
+        }
+
+        if ($rout =~ tr<\0><>c) {
+
+            # It’s critical to get_message() until undef is returned.
+            1 while $dbus->get_message();
+        }
+    }
+
+Life is easier if you use someone else’s event loop. :)
 
 =cut
