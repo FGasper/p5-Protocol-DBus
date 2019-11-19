@@ -3,7 +3,7 @@ package Protocol::DBus;
 use strict;
 use warnings;
 
-our $VERSION = '0.11_01';
+our $VERSION = '0.11_02';
 
 =encoding utf8
 
@@ -30,7 +30,7 @@ For blocking I/O:
         destination => 'org.freedesktop.DBus',
         signature => 's',
         body => [ 'org.freedesktop.DBus' ],
-    )->then( sub ($msg) { .. } );
+    )->then( sub ($resp_msg) { .. } );
 
     my $msg = $dbus->get_message();
 
@@ -44,8 +44,7 @@ Example:
 
     Protcol::DBus::Client::IOAsync::login_session($loop)->then(
         sub ($dbus) {
-
-            # … Now use $dbus as in the blocking-I/O example.
+            $dbus->send_call( … );
         },
     )->finally( sub { $loop->stop() } );
 
@@ -76,7 +75,7 @@ version. Please file bug reports as appropriate.
 
 =head1 EXAMPLES
 
-See L<Protocol::DBus::Client> and the above sample for a starting point.
+See L<Protocol::DBus::Client> and the above samples for a starting point.
 
 Also see the distribution’s F<examples/> directory.
 
@@ -87,11 +86,11 @@ Also see the distribution’s F<examples/> directory.
 =item * UNIX FD support requires that L<Socket::MsgHdr> be loaded at
 authentication time.
 
-=item * Certain OSes may require L<Socket::MsgHdr> to function.
-(Linux, notably, does not.) It depends if your OS can send local socket
-credentials without recourse to C<sendmsg(2)>.
+=item * Certain OSes may require L<Socket::MsgHdr> in order to authenticate
+via a UNIX socket. (Linux, notably, does not.) It depends if your OS can
+send local socket credentials without using C<sendmsg(2)>.
 
-=item * EXTERNAL and DBUS_COOKIE_SHA1 authentication is supported.
+=item * EXTERNAL and DBUS_COOKIE_SHA1 authentications are supported.
 
 =back
 
