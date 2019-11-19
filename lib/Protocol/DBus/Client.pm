@@ -72,6 +72,8 @@ sub login_session {
 sub _create_local {
     my ($addr) = @_;
     my ($socket, $bin_addr) = Protocol::DBus::Connect::create_socket($addr);
+use Data::Dumper;
+print STDERR Dumper($socket, $bin_addr);
 
     return __PACKAGE__->new(
         socket => $socket,
@@ -135,14 +137,16 @@ sub _connect {
 
     local $!;
 
-    $self->{'_sent_connect'} ||= do {
-        if ( connect $self->{'_socket'}, $self->{'_address'} ) {
-            $self->{'_connected'} = 1;
-        }
-        elsif (!$!{'EINPROGRESS'}) {
-            die "connect($self->{'_human_address'}): $!";
-        }
-    };
+    if (!$self->{'_connected'}) {
+        $self->{'_sent_connect'} ||= do {
+            if ( connect $self->{'_socket'}, $self->{'_address'} ) {
+                $self->{'_connected'} = 1;
+            }
+            elsif (!$!{'EINPROGRESS'}) {
+                die "connect($self->{'_human_address'}): $!";
+            }
+        };
+    }
 
     if (!$self->{'_connected'}) {
 
@@ -274,14 +278,20 @@ sub new {
     my $self = $class->SUPER::new( $opts{'socket'} );
 
     $self->{'_authn'} = $authn;
-    $self->{'_address'} = $opts{'address'};
-    $self->{'_human_address'} = $opts{'human_address'};
+
+    if (my $address = $opts{'address'}) {
+        $self->{'_address'} = $address;
+        $self->{'_human_address'} = $opts{'human_address'};
+    }
+    else {
+        $self->{'_connected'} = 1;
+    }
 
     return $self;
 }
 
-sub DESTROY {
-    print "DESTROYED: [$_[0]]\n";
-}
+#sub DESTROY {
+#    print "DESTROYED: [$_[0]]\n";
+#}
 
 1;

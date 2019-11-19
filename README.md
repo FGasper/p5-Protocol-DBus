@@ -21,7 +21,7 @@ For blocking I/O:
         destination => 'org.freedesktop.DBus',
         signature => 's',
         body => [ 'org.freedesktop.DBus' ],
-    )->then( sub ($msg) { .. } );
+    )->then( sub ($resp_msg) { .. } );
 
     my $msg = $dbus->get_message();
 
@@ -35,8 +35,7 @@ Example:
 
     Protcol::DBus::Client::IOAsync::login_session($loop)->then(
         sub ($dbus) {
-
-            # … Now use $dbus as in the blocking-I/O example.
+            $dbus->send_call( … );
         },
     )->finally( sub { $loop->stop() } );
 
@@ -67,7 +66,7 @@ version. Please file bug reports as appropriate.
 
 # EXAMPLES
 
-See [Protocol::DBus::Client](https://metacpan.org/pod/Protocol::DBus::Client) and the above sample for a starting point.
+See [Protocol::DBus::Client](https://metacpan.org/pod/Protocol::DBus::Client) and the above samples for a starting point.
 
 Also see the distribution’s `examples/` directory.
 
@@ -75,10 +74,10 @@ Also see the distribution’s `examples/` directory.
 
 - UNIX FD support requires that [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) be loaded at
 authentication time.
-- Certain OSes may require [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) to function.
-(Linux, notably, does not.) It depends if your OS can send local socket
-credentials without recourse to `sendmsg(2)`.
-- EXTERNAL and DBUS\_COOKIE\_SHA1 authentication is supported.
+- Certain OSes may require [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) in order to authenticate
+via a UNIX socket. (Linux, notably, does not.) It depends if your OS can
+send local socket credentials without using `sendmsg(2)`.
+- EXTERNAL and DBUS\_COOKIE\_SHA1 authentications are supported.
 
 # TODO
 

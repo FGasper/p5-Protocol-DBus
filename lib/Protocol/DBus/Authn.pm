@@ -273,8 +273,8 @@ sub _is_unix_socket {
     return Socket::sockaddr_family($sname) == Socket::AF_UNIX();
 }
 
-sub DESTROY {
-    print "DESTROYED: [$_[0]]\n";
-}
+#sub DESTROY {
+#    print "DESTROYED: [$_[0]]\n";
+#}
 
 1;
