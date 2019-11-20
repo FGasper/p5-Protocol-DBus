@@ -25,9 +25,12 @@ For blocking I/O:
 
     my $msg = $dbus->get_message();
 
-For non-blocking I/O, it is recommended to use either
-[Protocol::DBus::Client::IOAsync](https://metacpan.org/pod/Protocol::DBus::Client::IOAsync) (for [IO::Async](https://metacpan.org/pod/IO::Async)) or
-[Protocol::DBus::Client::AnyEvent](https://metacpan.org/pod/Protocol::DBus::Client::AnyEvent) (for [AnyEvent](https://metacpan.org/pod/AnyEvent)).
+For non-blocking I/O, it is recommended to use an event loop.
+This distribution includes some connectors to simplify that work:
+
+- [Protocol::DBus::Client::IOAsync](https://metacpan.org/pod/Protocol::DBus::Client::IOAsync) (for [IO::Async](https://metacpan.org/pod/IO::Async))
+- [Protocol::DBus::Client::Mojo](https://metacpan.org/pod/Protocol::DBus::Client::Mojo) (for [Mojolicious](https://metacpan.org/pod/Mojolicious))
+- [Protocol::DBus::Client::AnyEvent](https://metacpan.org/pod/Protocol::DBus::Client::AnyEvent) (for [AnyEvent](https://metacpan.org/pod/AnyEvent))
 
 Example:
 
@@ -35,13 +38,14 @@ Example:
 
     Protcol::DBus::Client::IOAsync::login_session($loop)->then(
         sub ($dbus) {
-            $dbus->send_call( … );
+            $dbus->send_call( … );  # same arguments as above
         },
     )->finally( sub { $loop->stop() } );
 
     $loop->run();
 
-See below for an example using a manually-written event loop.
+You can also interface with a manually-written event loop.
+See [the example](#example-using-manually-written-event-loop) below.
 
 # DESCRIPTION
 
@@ -54,8 +58,8 @@ This is fine, of course, if all you want to do is, e.g., replace
 an invocation of `gdbus` or `dbus-send` with pure Perl.
 
 If you want an interface that mimics D-Bus’s actual object system,
-you’ll need to implement it yourself or to look elsewhere.
-(See ["SEE ALSO"](#see-also) below.)
+you’ll need to implement it yourself or use something like [Net::DBus](https://metacpan.org/pod/Net::DBus).
+(See ["DIFFERENCES FROM Net::DBus"](#differences-from-net-dbus) below.)
 
 # STATUS
 
@@ -70,6 +74,34 @@ See [Protocol::DBus::Client](https://metacpan.org/pod/Protocol::DBus::Client) an
 
 Also see the distribution’s `examples/` directory.
 
+# DIFFERENCES FROM Net::DBus
+
+[Net::DBus](https://metacpan.org/pod/Net::DBus) is an XS binding to
+[libdbus](https://www.freedesktop.org/wiki/Software/dbus/),
+the reference D-Bus implementation. It is CPAN’s most mature D-Bus
+implementation.
+
+There are several reasons why you might prefer this module instead,
+though, such as:
+
+- Net::DBus discerns how to send a method call via D-Bus introspection.
+While handy, this costs extra network overhead and requires an XML parser.
+With Protocol::DBus you give a signature directly to send a method call,
+- Protocol::DBus can work smoothly with any event system you like,
+including custom-written ones. (The distribution ships with connectors for
+three popular ones.) Net::DBus, on the other hand, expects you to use its
+own event loop, [Net::DBus::Reactor](https://metacpan.org/pod/Net::DBus::Reactor).
+- Protocol::DBus has a considerably lighter memory footprint.
+- Protocol::DBus is pure Perl, so on most OSes you can fat-pack it
+for easy distribution.
+- Protocol::DBus exposes a simpler API.
+
+Of course, there are tradeoffs: most notably, Protocol::DBus’s API is
+simpler because it doesn’t attempt to implement D-Bus’s object system.
+(You never **need** the object system, but it can be a useful abstraction.)
+An XS-powered D-Bus library is also likely to outperform a
+pure-Perl one, introspection overhead notwithstanding. YMMV. BYOB.
+
 # NOTES
 
 - UNIX FD support requires that [Socket::MsgHdr](https://metacpan.org/pod/Socket::MsgHdr) be loaded at
@@ -83,12 +115,6 @@ send local socket credentials without using `sendmsg(2)`.
 
 - Improve parsing of bus paths in environment variables.
 - Add more tests.
-
-# SEE ALSO
-
-The most mature, stable D-Bus implementation in Perl is [Net::DBus](https://metacpan.org/pod/Net::DBus),
-an XS binding to [libdbus](https://www.freedesktop.org/wiki/Software/dbus/),
-the reference D-Bus implementation.
 
 # EXAMPLE USING MANUALLY-WRITTEN EVENT LOOP
 

@@ -28,6 +28,7 @@ lib/Protocol/DBus/Client/AnyEvent.pm
 lib/Protocol/DBus/Client/EventBase.pm
 lib/Protocol/DBus/Client/EventMessenger.pm
 lib/Protocol/DBus/Client/IOAsync.pm
+lib/Protocol/DBus/Client/Mojo.pm
 lib/Protocol/DBus/Connect.pm
 lib/Protocol/DBus/Marshal.pm
 lib/Protocol/DBus/Message.pm
