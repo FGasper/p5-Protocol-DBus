@@ -207,7 +207,6 @@ for my $t (@too_short) {
     );
 }
 
-use Carp::Always;
 my @positive_le_tests = (
     {
         in => ["\x0a\0\0\0", 0, 'u'],
