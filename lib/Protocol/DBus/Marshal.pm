@@ -375,22 +375,6 @@ sub _unmarshal_struct {
     return ($items_ar, ($buf_offset - $buf_start) + $len);
 }
 
-#----------------------------------------------------------------------
-# The logic below is unused. I was under the impression that I’d need a
-# way to determine if a message body’s length matches the given SIGNATURE,
-# but of course we don’t because the header includes the body length.
-#----------------------------------------------------------------------
-
-sub buffer_length_satisfies_signature_le {
-    local $_ENDIAN_PACK = '<';
-    return (_buffer_length_satisfies_signature(@_))[0];
-}
-
-sub buffer_length_satisfies_signature_be {
-    local $_ENDIAN_PACK = '>';
-    return (_buffer_length_satisfies_signature(@_))[0];
-}
-
 sub _buffer_length_satisfies_signature {
     my ($buf, $buf_offset, $sig) = @_;
 
@@ -463,6 +447,9 @@ sub _buffer_length_satisfies_signature {
 
 sub _add_uint32_variant_length {
     my ($buf_sr, $buf_offset_sr) = @_;
+use Data::Dumper;
+$Data::Dumper::Useqq = 1;
+print STDERR Dumper @_;
 
     Protocol::DBus::Pack::align( $$buf_offset_sr, 4 );
 

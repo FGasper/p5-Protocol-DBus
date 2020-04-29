@@ -195,18 +195,6 @@ for my $t (@marshal_le_tests) {
 #exit;
 #----------------------------------------------------------------------
 
-my @too_short = (
-    [ "\x02\0\0\0hi\0" . "\0" . "\x04\0". "\x02", 0, '(s(qq))'],
-);
-
-for my $t (@too_short) {
-    my $str = _str_for_buf_offset_sig(@$t);
-    ok(
-        !Protocol::DBus::Marshal::buffer_length_satisfies_signature_le(@$t),
-        "too short: $str",
-    );
-}
-
 my @positive_le_tests = (
     {
         in => ["\x0a\0\0\0", 0, 'u'],
@@ -405,16 +393,6 @@ for my $t (@positive_le_tests) {
         $t->{'out'},
         "unmarshal_le: $str",
     ) or diag explain [$data, $offset_delta];
-
-    ok(
-        Protocol::DBus::Marshal::buffer_length_satisfies_signature_le(@{ $t->{'in'} }),
-        '… and length satisfies',
-    );
-
-    ok(
-        !Protocol::DBus::Marshal::buffer_length_satisfies_signature_le(substr($buf, 0, -5), $buf_offset, $sig),
-        '… and buffer minus 5 bytes doesn’t satisfy length',
-    );
 }
 
 sub _str_for_buf_offset_sig {
