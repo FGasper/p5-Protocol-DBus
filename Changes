@@ -1,5 +1,12 @@
 Revision history for Perl module Protocol::DBus
 
+0.15
+- BREAKING CHANGE: The “send_*” methods of Peer.pm and
+EventMessenger.pm now all return promises.
+- BREAKING CHANGE: send_call() no longer throws exceptions; all failure cases
+are communicated as rejections of the returned promise.
+- Document “flags” parameter to send_call().
+
 0.14 Wed 25 Mar 2020
 - Clarify UTF-8 encoding requirement in documentation. (No code changes.)
 
