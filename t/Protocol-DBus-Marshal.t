@@ -66,6 +66,16 @@ my @marshal_le_tests = (
     },
 
     {
+        in => [ 's', [ do { use utf8; "é" } ] ],
+        out => "\x02\0\0\0é\0",
+    },
+
+    {
+        in => [ 's', [ "é" ] ],
+        out => "\x04\0\0\0" . do { utf8::encode(my $v = 'é'); $v } . "\0",
+    },
+
+    {
         in => [ 'o',[  '/yb' ] ],
         out => "\x03\0\0\0/yb\0",
     },
@@ -197,10 +207,25 @@ for my $t (@too_short) {
     );
 }
 
+use Carp::Always;
 my @positive_le_tests = (
     {
         in => ["\x0a\0\0\0", 0, 'u'],
         out => [ [10], 4 ],
+    },
+
+    {
+        in => [ "\x02\0\0\0é\0", 0, 's'],
+        out => [ [ do { use utf8; "é" } ], 7 ],
+    },
+
+    {
+        in => [
+            "\x04\0\0\0" . do { utf8::encode(my $v = 'é'); $v } . "\0",
+            0,
+            's',
+        ],
+        out => [ [ "é" ], 9 ],
     },
 
     {

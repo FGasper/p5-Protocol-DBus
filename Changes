@@ -1,6 +1,8 @@
 Revision history for Perl module Protocol::DBus
 
 0.15
+- BREAKING CHANGE: This module now expects and returns strings as
+  character-decoded. (Previously it did no encoding nor decoding.)
 - BREAKING CHANGE: The “send_*” methods of Peer.pm and
 EventMessenger.pm now all return promises.
 - BREAKING CHANGE: send_call() no longer throws exceptions; all failure cases
