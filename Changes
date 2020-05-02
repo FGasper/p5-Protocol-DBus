@@ -7,6 +7,7 @@ Revision history for Perl module Protocol::DBus
 EventMessenger.pm now all return promises.
 - BREAKING CHANGE: send_call() no longer throws exceptions; all failure cases
 are communicated as rejections of the returned promise.
+- Add on_failure callback to event loop modules.
 - Document “flags” parameter to send_call().
 
 0.14 Wed 25 Mar 2020
