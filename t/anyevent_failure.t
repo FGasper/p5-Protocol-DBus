@@ -7,7 +7,7 @@ use Test::More;
 use Test::FailWarnings;
 
 SKIP: {
-    skip 'No AnyEvent!' if !eval { require AnyEvent };
+    skip 'No AnyEvent!', 1 if !eval { require AnyEvent };
 
     require Protocol::DBus::Client::AnyEvent;
 
@@ -51,7 +51,7 @@ SKIP: {
         },
         sub {
             $cv->();
-            skip "Failed to initialize: $_[0]";
+            skip "Failed to initialize: $_[0]", 1;
         },
     );
 
