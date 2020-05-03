@@ -8,11 +8,12 @@ use Test::FailWarnings;
 
 SKIP: {
     skip 'No IO::Async!', 1 if !eval { require IO::Async::Loop };
-    skip 'Loop can’t watch_time()!' if !$loop->can('watch_time');
+
+    my $loop = IO::Async::Loop->new();
+    skip 'Loop can’t watch_time()!', 1 if !$loop->can('watch_time');
 
     require Protocol::DBus::Client::IOAsync;
 
-    my $loop = IO::Async::Loop->new();
 
     my $dbus = Protocol::DBus::Client::IOAsync::login_session($loop);
 
