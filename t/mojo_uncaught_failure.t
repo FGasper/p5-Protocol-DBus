@@ -8,6 +8,7 @@ use Test::FailWarnings;
 
 SKIP: {
     skip 'No Mojo::IOLoop!', 1 if !eval { require Mojo::IOLoop };
+    skip 'Loop can’t timer()!' if !Mojo::IOLoop->can('timer');
 
     require Protocol::DBus::Client::Mojo;
 
