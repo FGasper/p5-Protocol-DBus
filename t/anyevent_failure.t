@@ -11,7 +11,9 @@ SKIP: {
 
     require Protocol::DBus::Client::AnyEvent;
 
-    my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
+    my $dbus = eval {
+        Protocol::DBus::Client::AnyEvent::login_session();
+    } or skip "Can’t open login session: $@";
 
     my $cv = AnyEvent->condvar();
 

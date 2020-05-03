@@ -14,8 +14,9 @@ SKIP: {
 
     require Protocol::DBus::Client::IOAsync;
 
-
-    my $dbus = Protocol::DBus::Client::IOAsync::login_session($loop);
+    my $dbus = eval {
+        Protocol::DBus::Client::IOAsync::login_session($loop);
+    } or skip "Can’t open login session: $@";
 
     $loop->watch_time( after => 0.1, code => sub { $loop->stop } );
 

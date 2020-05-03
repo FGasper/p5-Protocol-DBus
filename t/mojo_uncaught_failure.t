@@ -12,7 +12,9 @@ SKIP: {
 
     require Protocol::DBus::Client::Mojo;
 
-    my $dbus = Protocol::DBus::Client::Mojo::login_session();
+    my $dbus = eval {
+        Protocol::DBus::Client::Mojo::login_session();
+    } or skip "Can’t open login session: $@";
 
     Mojo::IOLoop->timer( 0.1 => sub { Mojo::IOLoop->stop } );
 
