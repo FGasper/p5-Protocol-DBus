@@ -159,6 +159,7 @@ sub _create_get_message_callback {
     my $on_signal_cr_r = $self->{'_on_signal_r'} ||= \do { my $v = undef };
 
     my $on_failure_cr_r = \$self->{'_on_failure'};
+    my $stop_reading_cr_r = \$self->{'_stop_reading_cr'};
 
     return sub {
         my $ok = eval {
@@ -184,8 +185,16 @@ sub _create_get_message_callback {
             else {
                 warn $err;
             }
+
+            $$stop_reading_cr_r->();
         }
     };
+}
+
+sub DESTROY {
+    if (defined ${^GLOBAL_PHASE} && 'DESTROY' eq ${^GLOBAL_PHASE}) {
+        warn "$_[0] lasted until ${^GLOBAL_PHASE} phase!";
+    }
 }
 
 1;

@@ -15,17 +15,9 @@ SKIP: {
 
     my $cv = AnyEvent->condvar();
 
-    $dbus->on_failure( sub {
-        like( $_[0], qr<.>, 'failure happens' );
-        $cv->();
-    } );
-
     my $timer = AnyEvent->timer(
-        after => 5,
-        cb => sub {
-            fail 'timed out';
-            $cv->();
-        },
+        after => 0.1,
+        cb => $cv,
     );
 
     $dbus->initialize()->then(
@@ -55,7 +47,17 @@ SKIP: {
         },
     );
 
-    $cv->recv();
+    my @w;
+    do {
+        local $SIG{'__WARN__'} = sub { push @w, @_; };
+        $cv->recv();
+    };
+
+    is(
+        0 + @w,
+        1,
+        'single warning',
+    ) or diag explain \@w;
 };
 
 done_testing;

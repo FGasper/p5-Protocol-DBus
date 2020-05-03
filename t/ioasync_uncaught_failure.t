@@ -7,26 +7,15 @@ use Test::More;
 use Test::FailWarnings;
 
 SKIP: {
-    skip 'No AnyEvent!', 1 if !eval { require AnyEvent };
+    skip 'No IO::Async!', 1 if !eval { require IO::Async::Loop };
 
-    require Protocol::DBus::Client::AnyEvent;
+    require Protocol::DBus::Client::IOAsync;
 
-    my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
+    my $loop = IO::Async::Loop->new();
 
-    my $cv = AnyEvent->condvar();
+    my $dbus = Protocol::DBus::Client::IOAsync::login_session($loop);
 
-    $dbus->on_failure( sub {
-        like( $_[0], qr<.>, 'failure happens' );
-        $cv->();
-    } );
-
-    my $timer = AnyEvent->timer(
-        after => 5,
-        cb => sub {
-            fail 'timed out';
-            $cv->();
-        },
-    );
+    $loop->watch_time( after => 0.1, code => sub { $loop->stop } );
 
     $dbus->initialize()->then(
         sub {
@@ -50,12 +39,22 @@ SKIP: {
             );
         },
         sub {
-            $cv->();
+            $loop->stop;
             skip "Failed to initialize: $_[0]", 1;
         },
     );
 
-    $cv->recv();
+    my @w;
+    do {
+        local $SIG{'__WARN__'} = sub { push @w, @_; };
+        $loop->run();
+    };
+
+    is(
+        0 + @w,
+        1,
+        'single warning',
+    ) or diag explain \@w;
 };
 
 done_testing;

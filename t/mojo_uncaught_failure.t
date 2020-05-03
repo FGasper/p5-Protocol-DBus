@@ -7,26 +7,13 @@ use Test::More;
 use Test::FailWarnings;
 
 SKIP: {
-    skip 'No AnyEvent!', 1 if !eval { require AnyEvent };
+    skip 'No Mojo::IOLoop!', 1 if !eval { require Mojo::IOLoop };
 
-    require Protocol::DBus::Client::AnyEvent;
+    require Protocol::DBus::Client::Mojo;
 
-    my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
+    my $dbus = Protocol::DBus::Client::Mojo::login_session();
 
-    my $cv = AnyEvent->condvar();
-
-    $dbus->on_failure( sub {
-        like( $_[0], qr<.>, 'failure happens' );
-        $cv->();
-    } );
-
-    my $timer = AnyEvent->timer(
-        after => 5,
-        cb => sub {
-            fail 'timed out';
-            $cv->();
-        },
-    );
+    Mojo::IOLoop->timer( 0.1 => sub { Mojo::IOLoop->stop } );
 
     $dbus->initialize()->then(
         sub {
@@ -50,12 +37,22 @@ SKIP: {
             );
         },
         sub {
-            $cv->();
+            Mojo::IOLoop->stop;
             skip "Failed to initialize: $_[0]", 1;
         },
     );
 
-    $cv->recv();
+    my @w;
+    do {
+        local $SIG{'__WARN__'} = sub { push @w, @_; };
+        Mojo::IOLoop->start();
+    };
+
+    is(
+        0 + @w,
+        1,
+        'single warning',
+    ) or diag explain \@w;
 };
 
 done_testing;

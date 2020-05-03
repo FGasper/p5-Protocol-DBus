@@ -174,6 +174,12 @@ sub _set_watches_and_create_messenger {
             poll => 'r',
             cb => $self->_create_get_message_callback(),
         );
+
+        my $read_watch_sr = \$self->{'_read_watch'};
+
+        $self->{'_stop_reading_cr'} = sub {
+            $$read_watch_sr = undef;
+        };
     }
 
     return $flush_cr;

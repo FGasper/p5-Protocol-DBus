@@ -44,6 +44,7 @@ lib/Protocol/DBus/WriteMsg.pm
 lib/Protocol/DBus/X.pm
 lib/Protocol/DBus/X/Base.pm
 lib/Protocol/DBus/X/Rejected.pm
+mojo_uncaught_failure.t
 t/Protocol-DBus-Address.t
 t/Protocol-DBus-Authn-Mechanism-DBUS_SESSION_SHA1-Pieces.t
 t/Protocol-DBus-Authn-Mechanism-DBUS_SESSION_SHA1.t
@@ -54,6 +55,8 @@ t/Protocol-DBus-Message.t
 t/Protocol-DBus-Parser-UnixFDs.t
 t/Protocol-DBus-Signature.t
 t/anyevent_failure.t
+t/anyevent_uncaught_failure.t
 t/integration.t
+t/ioasync_uncaught_failure.t
 t/lib/ClientServer.pm
 t/lib/MockDBusServer.pm
