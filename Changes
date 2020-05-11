@@ -1,6 +1,10 @@
 Revision history for Perl module Protocol::DBus
 
-0.15
+0.16
+- BUG FIX: Typo in write-congestion logic in Mojo.pm.
+- Add pause() and resume() controls to EventBase subclasses.
+
+0.15 Sun 3 May 2020
 - BREAKING CHANGE: This module now expects and returns strings as
 character-decoded. Previously it did no encoding nor decoding. (This change
 is made to prevent invalid UTF-8 from being sent.)

@@ -61,6 +61,8 @@ sub initialize {
         return Protocol::DBus::Client::EventMessenger->new(
             $self->{'db'},
             $post_send_cr,
+            sub { $self->_pause() },
+            sub { $self->_resume() },
         );
     } );
 }

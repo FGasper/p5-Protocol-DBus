@@ -42,11 +42,28 @@ sub send_error { _wrap_send( 'send_error', @_ ) }
 
 sub send_signal { _wrap_send( 'send_signal', @_ ) }
 
+=pod
+
+The following control whether to accept incoming messages from D-Bus:
+
+=over
+
+=item * C<pause()>
+
+=item * C<resume()>
+
+=back
+
+=cut
+
+sub pause { $_[0][2]->(); return $_[0] }
+sub resume { $_[0][3]->(); return $_[0] }
+
 # Undocumented
 sub new {
-    my ($class, $dbus, $post_send_cr) = @_;
+    my ($class, $dbus, $post_send_cr, $pause_cr, $resume_cr) = @_;
 
-    return bless [$dbus, $post_send_cr], $class;
+    return bless [$dbus, $post_send_cr, $pause_cr, $resume_cr], $class;
 }
 
 # for testing
