@@ -59,6 +59,10 @@ The following control whether to accept incoming messages from D-Bus:
 sub pause { $_[0][2]->(); return $_[0] }
 sub resume { $_[0][3]->(); return $_[0] }
 
+sub get_unique_bus_name {
+    return $_[0]->_dbus()->get_unique_bus_name();
+}
+
 # Undocumented
 sub new {
     my ($class, $dbus, $post_send_cr, $pause_cr, $resume_cr) = @_;
