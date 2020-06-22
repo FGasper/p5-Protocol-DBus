@@ -1,6 +1,6 @@
 Revision history for Perl module Protocol::DBus
 
-0.16
+0.16 22 June 2020
 - BUG FIX: Typo in write-congestion logic in Mojo.pm.
 - Add pause(), resume(), and get_unique_bus_name() to EventMessenger.
 - Fix race conditions in uncaught-failure tests.
