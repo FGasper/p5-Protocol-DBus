@@ -5,7 +5,7 @@ Revision history for Perl module Protocol::DBus
 - BUG FIX: Fix nonblocking mode on pre-5.14 perls.
 - Make event loops defer polling until at least one initialize() has run.
 - Increase event loop test coverage.
-- Work around a Devel::Cover bug
+- Work around an apparent Devel::Cover bug. (https://github.com/pjcj/Devel--Cover/issues/276)
 - Test suite now passes on Windows … for what that’s worth!
 
 0.16 Mon 22 June 2020
