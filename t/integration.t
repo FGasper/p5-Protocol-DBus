@@ -94,7 +94,7 @@ SKIP: {
     my $can_anyevent = readpipe qq<$^X -e'print eval { require AnyEvent; 1 } || 0'>;
     skip 'No usable AnyEvent', 1 if !$can_anyevent;
 
-    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::AnyEvent -MAnyEvent -e'my \$dbus = Protocol::DBus::Client::AnyEvent::system(); my \$cv = AnyEvent->condvar(); \$dbus->initialize()->finally(\$cv); \$cv->recv(); print "ok"'] );
+    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::AnyEvent -MAnyEvent -e'my \$dbus = Protocol::DBus::Client::AnyEvent::login_session(); my \$cv = AnyEvent->condvar(); \$dbus->initialize()->finally(\$cv); \$cv->recv(); print "ok"'] );
 
     is($run, 'ok', 'AnyEvent did initialize()');
 }
@@ -105,7 +105,7 @@ SKIP: {
     my $can_ioasync = readpipe qq<$^X -e'print eval { require IO::Async::Loop; 1 } || 0'>;
     skip 'No usable IO::Async', 1 if !$can_ioasync;
 
-    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::IOAsync -MIO::Async::Loop -e'my \$loop = IO::Async::Loop->new(); my \$dbus = Protocol::DBus::Client::IOAsync::system(\$loop); \$dbus->initialize()->finally( sub { \$loop->stop() } ); \$loop->run(); print "ok"'] );
+    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::IOAsync -MIO::Async::Loop -e'my \$loop = IO::Async::Loop->new(); my \$dbus = Protocol::DBus::Client::IOAsync::login_session(\$loop); \$dbus->initialize()->finally( sub { \$loop->stop() } ); \$loop->run(); print "ok"'] );
 
     is($run, 'ok', 'IO::Async did initialize()');
 }
@@ -116,7 +116,7 @@ SKIP: {
     my $can_mojo = readpipe qq<$^X -e'print eval { require Mojo::IOLoop; 1 } || 0'>;
     skip 'No usable Mojo::IOLoop', 1 if !$can_mojo;
 
-    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::Mojo -MMojo::IOLoop -e'my \$dbus = Protocol::DBus::Client::Mojo::system(); my \$p = \$dbus->initialize(); \$p->wait(); print "ok"'] );
+    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::Mojo -MMojo::IOLoop -e'my \$dbus = Protocol::DBus::Client::Mojo::login_session(); my \$p = \$dbus->initialize(); \$p->wait(); print "ok"'] );
 
     is($run, 'ok', 'Mojo did initialize()');
 }
