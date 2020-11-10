@@ -6,11 +6,11 @@ use warnings;
 use Test::More;
 use Test::FailWarnings;
 
-use Mojo::Promise;
-
 SKIP: {
     skip 'No Mojo::IOLoop!', 1 if !eval { require Mojo::IOLoop };
     skip 'Loop can’t timer()!', 1 if !Mojo::IOLoop->can('timer');
+
+    require Mojo::Promise;
 
     require Protocol::DBus::Client::Mojo;
 
