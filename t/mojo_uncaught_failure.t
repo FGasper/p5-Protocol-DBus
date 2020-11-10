@@ -6,6 +6,8 @@ use warnings;
 use Test::More;
 use Test::FailWarnings;
 
+use Mojo::Promise;
+
 SKIP: {
     skip 'No Mojo::IOLoop!', 1 if !eval { require Mojo::IOLoop };
     skip 'Loop can’t timer()!', 1 if !Mojo::IOLoop->can('timer');
@@ -16,7 +18,7 @@ SKIP: {
         Protocol::DBus::Client::Mojo::login_session();
     } or skip "Can’t open login session: $@";
 
-    $dbus->initialize()->then(
+    my $dbus_p = $dbus->initialize()->then(
         sub {
             my $msgr = shift;
 
@@ -28,26 +30,36 @@ SKIP: {
 
             syswrite $fh, 'z';
 
-            $msgr->send_signal(
+            return $msgr->send_signal(
                 path => '/what/ever',
                 interface => 'what.ever',
                 member => 'member',
             )->then(
                 sub { diag "signal sent\n" },
-                sub { diag "signal NOT sent\n" },
-            )->finally( sub {
-                Mojo::IOLoop->timer( 0.1 => sub { Mojo::IOLoop->stop } );
-            } );
+                sub { diag "signal NOT sent (@_)\n" },
+            );
         },
         sub {
-            Mojo::IOLoop->stop;
             skip "Failed to initialize: $_[0]", 1;
         },
     );
 
+    my ($warn_y);
+    my $warn_p = Mojo::Promise->new( sub {
+        $warn_y = shift;
+    } );
+
     my @w;
     do {
-        local $SIG{'__WARN__'} = sub { push @w, @_; };
+        local $SIG{'__WARN__'} = sub {
+            $warn_y->();
+            push @w, @_;
+        };
+
+        Mojo::Promise->all($warn_p, $dbus_p)->then( sub {
+            Mojo::IOLoop->stop();
+        } );
+
         Mojo::IOLoop->start();
     };
 

@@ -132,8 +132,14 @@ sub _initialize {
     };
 
     $reactor->io( $socket, $cb );
+    $reactor->watch($socket, 0, 0);
 
-    $cb->();
+    # It does work to watch for readability right away, but only
+    # because poll(POLLIN) gives POLLHUP, which Mojo interprets
+    # as read-ready. Let’s not depend on that.
+    $reactor->next_tick($cb);
+
+    return;
 }
 
 sub _flush_send_queue {

@@ -48,6 +48,11 @@ use Protocol::DBus::Client;
 
 #----------------------------------------------------------------------
 
+# Ensure that we test with the intended version of Protocol::DBus …
+my @incargs = map { "-I$_" } @INC;
+
+my $dbus_run_session_bin;
+
 SKIP: {
     my $bin = File::Which::which('dbus-run-session') or do {
         skip 'No dbus-run-session', 1;
@@ -58,7 +63,9 @@ SKIP: {
         skip 'dbus-run-session exited nonzero', 1;
     }
 
-    my $loaded_smh = readpipe( qq[$bin -- $^X -MProtocol::DBus::Client -e 'Protocol::DBus::Client::login_session()->initialize(); print \$INC{"Socket/MsgHdr.pm"} ? "y" : "n"'] );
+    $dbus_run_session_bin = $bin;
+
+    my $loaded_smh = readpipe( qq[$bin -- $^X @incargs -MProtocol::DBus::Client -e 'Protocol::DBus::Client::login_session()->initialize(); print \$INC{"Socket/MsgHdr.pm"} ? "y" : "n"'] );
 
     my $no_msghdr_needed = grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
 
@@ -81,4 +88,38 @@ SKIP: {
 
 #----------------------------------------------------------------------
 
+SKIP: {
+    skip 'No usable dbus-run-session', 1 if !$dbus_run_session_bin;
+
+    my $can_anyevent = readpipe qq<$^X -e'print eval { require AnyEvent; 1 } || 0'>;
+    skip 'No usable AnyEvent', 1 if !$can_anyevent;
+
+    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::AnyEvent -MAnyEvent -e'my \$dbus = Protocol::DBus::Client::AnyEvent::system(); my \$cv = AnyEvent->condvar(); \$dbus->initialize()->finally(\$cv); \$cv->recv(); print "ok"'] );
+
+    is($run, 'ok', 'AnyEvent did initialize()');
+}
+
+SKIP: {
+    skip 'No usable dbus-run-session', 1 if !$dbus_run_session_bin;
+
+    my $can_ioasync = readpipe qq<$^X -e'print eval { require IO::Async::Loop; 1 } || 0'>;
+    skip 'No usable IO::Async', 1 if !$can_ioasync;
+
+    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::IOAsync -MIO::Async::Loop -e'my \$loop = IO::Async::Loop->new(); my \$dbus = Protocol::DBus::Client::IOAsync::system(\$loop); \$dbus->initialize()->finally( sub { \$loop->stop() } ); \$loop->run(); print "ok"'] );
+
+    is($run, 'ok', 'IO::Async did initialize()');
+}
+
+SKIP: {
+    skip 'No usable dbus-run-session', 1 if !$dbus_run_session_bin;
+
+    my $can_mojo = readpipe qq<$^X -e'print eval { require Mojo::IOLoop; 1 } || 0'>;
+    skip 'No usable Mojo::IOLoop', 1 if !$can_mojo;
+
+    my $run = readpipe( qq[$dbus_run_session_bin -- $^X @incargs -MProtocol::DBus::Client::Mojo -MMojo::IOLoop -e'my \$dbus = Protocol::DBus::Client::Mojo::system(); my \$p = \$dbus->initialize(); \$p->wait(); print "ok"'] );
+
+    is($run, 'ok', 'Mojo did initialize()');
+}
+
 done_testing();
+
