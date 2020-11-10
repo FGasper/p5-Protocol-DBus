@@ -203,7 +203,12 @@ sub DESTROY {
     my ($self) = @_;
 
     if (my $socket = delete $self->{'socket'}) {
-        Mojo::IOLoop->singleton->reactor()->remove($socket);
+
+        # At global destruction the singleton might already be gone.
+        my $singleton = Mojo::IOLoop->singleton();
+
+        my $reactor = $singleton && $singleton->reactor();
+        $reactor->remove($socket) if $reactor;
     }
 
     $self->SUPER::DESTROY() if $ISA[0]->can('DESTROY');

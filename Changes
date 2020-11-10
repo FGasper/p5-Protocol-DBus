@@ -1,5 +1,8 @@
 Revision history for Perl module Protocol::DBus
 
+0.17
+- Mojo.pm: Fix errant remove() in DESTROY handler.
+
 0.16 Mon 22 June 2020
 - BUG FIX: Typo in write-congestion logic in Mojo.pm.
 - Add pause(), resume(), and get_unique_bus_name() to EventMessenger.
