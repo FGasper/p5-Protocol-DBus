@@ -48,6 +48,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: perl -V
         run: perl -V
+      - name: Install D-Bus
+        run: apt install -y dbus
       - name: Install AnyEvent (optional)
         run: "cpanm --notest AnyEvent ||:"
       - name: Install IO::Async (optional)
