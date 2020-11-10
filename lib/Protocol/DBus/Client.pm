@@ -104,7 +104,7 @@ sub initialize {
 
     if ($self->_connect() && $self->{'_authn'}->go()) {
         $self->{'_sent_hello'} ||= do {
-            my $connection_name_sr = \do { $self->{'_connection_name'} = undef };
+            my $connection_name_sr = \$self->{'_connection_name'};
 
             $self->send_call(
                 path => '/org/freedesktop/DBus',
