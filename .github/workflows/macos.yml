@@ -32,6 +32,8 @@ jobs:
         run: "curl -L https://cpanmin.us | perl - --notest IO::Async ||:"
       - name: Install Mojolicious (optional)
         run: "curl -L https://cpanmin.us | perl - --notest Mojolicious ||:"
+      - name: Install Socket::MsgHdr (optional)
+        run: "curl -L https://cpanmin.us | perl - --notest Socket::MsgHdr ||:"
       - name: Install Dependencies
         run: curl -L https://cpanmin.us | perl - --notest --installdeps .
       - name: perl Makefile.PL
