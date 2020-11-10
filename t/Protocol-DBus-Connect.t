@@ -17,11 +17,7 @@ use Protocol::DBus::Connect ();
 my $dir = File::Temp::tempdir( CLEANUP => 1 );
 my $path = File::Spec->catfile( $dir, 'socket' );
 
-socket my $s, Socket::AF_UNIX(), Socket::SOCK_STREAM(), 0;
-my $addr = Socket::pack_sockaddr_un($path);
-bind $s, $addr;
-
-listen( $s, 1 );
+my $s = _create_server($path);
 
 alarm 30;
 
@@ -30,7 +26,7 @@ my $pid = fork or do {
         accept( my $new, $s );
         syswrite $new, 'q';
     };
-    sleep;
+
     exit;
 };
 
@@ -71,6 +67,18 @@ is(
     '… and a piece of data is transferred as expected',
 );
 
-kill 'QUIT', $pid;
-
 done_testing();
+
+#----------------------------------------------------------------------
+
+sub _create_server {
+    my ($path) = @_;
+
+    socket my $s, Socket::AF_UNIX(), Socket::SOCK_STREAM(), 0;
+    my $addr = Socket::pack_sockaddr_un($path);
+    bind $s, $addr;
+
+    listen( $s, 1 );
+
+    return $s;
+}
