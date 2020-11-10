@@ -61,6 +61,7 @@ jobs:
       - name: make
         run: make
       - name: Run Tests (no coverage)
+        if: ${{ !matrix.coverage }}
         run: make test
       - name: Run tests (with coverage)
         if: ${{ matrix.coverage }}
