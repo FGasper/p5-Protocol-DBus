@@ -56,11 +56,7 @@ SKIP: {
             push @w, @_;
         };
 
-        Mojo::Promise->all($warn_p, $dbus_p)->then( sub {
-            Mojo::IOLoop->stop();
-        } );
-
-        Mojo::IOLoop->start();
+        Mojo::Promise->all($warn_p, $dbus_p)->wait();
     };
 
     is(
