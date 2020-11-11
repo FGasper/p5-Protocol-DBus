@@ -8,11 +8,19 @@ use Test::FailWarnings;
 
 use Promise::ES6;
 
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use DBusSession;
+
 SKIP: {
     skip 'No IO::Async!', 1 if !eval { require IO::Async::Loop };
 
     my $loop = IO::Async::Loop->new();
     skip 'Loop can’t watch_time()!', 1 if !$loop->can('watch_time');
+
+    DBusSession::get_bin_or_skip();
+
+    my $session = DBusSession->new();
 
     require Protocol::DBus::Client::IOAsync;
 

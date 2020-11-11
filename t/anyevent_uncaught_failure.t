@@ -8,8 +8,16 @@ use Test::FailWarnings;
 
 use Promise::ES6;
 
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use DBusSession;
+
 SKIP: {
     skip 'No AnyEvent!', 1 if !eval { require AnyEvent };
+
+    DBusSession::get_bin_or_skip();
+
+    my $session = DBusSession->new();
 
     require Protocol::DBus::Client::AnyEvent;
 

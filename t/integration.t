@@ -10,7 +10,10 @@ use Test::FailWarnings;
 use Protocol::DBus::Authn::Mechanism::EXTERNAL ();
 
 use File::Which;
-use File::Temp;
+
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use DBusSession;
 
 use Protocol::DBus::Client;
 
@@ -55,9 +58,7 @@ my @incargs = map { "-I$_" } @INC;
 my $dbus_run_session_bin;
 
 SKIP: {
-    my $bin = File::Which::which('dbus-run-session') or do {
-        skip 'No dbus-run-session', 1;
-    };
+    my $bin = DBusSession::get_bin_or_skip();
 
     my $env = readpipe("$bin -- $^X -MData::Dumper -e '\$Data::Dumper::Sortkeys = 1; print Dumper \\\%ENV'");
     if ($?) {
@@ -92,24 +93,11 @@ SKIP: {
 SKIP: {
     skip 'No usable dbus-run-session', 3 if !$dbus_run_session_bin;
 
-    my $dir = File::Temp::tempdir();
-
-    open my $rfh, '-|', "$dbus_run_session_bin -- $^X -e'\$| = 1; print \$INC{DBUS_SESSION_BUS_ADDRESS} . \$/; sleep 1 while !-e qq<$dir/done>'";
-
-    diag "reading bus address from child …";
-
-    my $address = readline $rfh;
-    chomp $address;
-
-    diag "bus address: $address";
-
-    local $ENV{'DBUS_SESSION_BUS_ADDRESS'} = $address;
+    my $sess = DBusSession->new();
 
     _test_anyevent();
     _test_ioasync();
     _test_mojo();
-
-    open my $wfh, '>', "$dir/done";
 }
 
 sub _test_anyevent {
