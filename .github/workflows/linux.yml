@@ -72,4 +72,6 @@ jobs:
         run: |
           cpanm -n Devel::Cover::Report::Coveralls
           cover -test -report Coveralls
-          prove -vl .
+      - name: Run tests - verbose (with coverage)
+        if: ${{ matrix.coverage }}
+        run: "prove -vl ."
