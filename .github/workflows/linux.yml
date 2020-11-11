@@ -74,4 +74,4 @@ jobs:
           cover -test -report Coveralls
       - name: Run tests - verbose (with coverage)
         if: ${{ matrix.coverage }}
-        run: "prove -vl ."
+        run: "prove -vl t"
