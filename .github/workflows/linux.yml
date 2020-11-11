@@ -72,3 +72,4 @@ jobs:
         run: |
           cpanm -n Devel::Cover::Report::Coveralls
           cover -test -report Coveralls
+          prove -vl .
