@@ -116,7 +116,7 @@ sub _test_anyevent {
             $cv->recv();
         };
 
-        ok( !$err, 'AnyEvent can initialize()' );
+        ok( !$err, 'AnyEvent can initialize()' ) or diag explain $err;
     }
 }
 
@@ -136,7 +136,7 @@ sub _test_ioasync {
             $loop->run();
         };
 
-        ok( !$err, 'IO::Async can initialize()' );
+        ok( !$err, 'IO::Async can initialize()' ) or diag explain $err;
     }
 }
 
@@ -154,7 +154,7 @@ sub _test_mojo {
             $dbus->initialize()->wait();
         };
 
-        ok( !$err, 'Mojo can initialize()' );
+        ok( !$err, 'Mojo can initialize()' ) or diag explain $err;
     }
 }
 
