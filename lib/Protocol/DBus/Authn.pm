@@ -21,9 +21,13 @@ sub new {
 
     $opts{"_$_"} = delete $opts{$_} for keys %opts;
 
+use Data::Dumper;
     $opts{'_can_pass_unix_fd'} = Socket::MsgHdr->can('new');
+print STDERR Dumper( canpass => $opts{'_can_pass_unix_fd'} );
     $opts{'_can_pass_unix_fd'} &&= Socket->can('SCM_RIGHTS');
+print STDERR Dumper( canpass2 => $opts{'_can_pass_unix_fd'} );
     $opts{'_can_pass_unix_fd'} &&= _is_unix_socket($opts{'_socket'});
+print STDERR Dumper( canpass3 => $opts{'_can_pass_unix_fd'} );
 
     $opts{'_io'} = IO::Framed->new( $opts{'_socket'} )->enable_write_queue();
 
