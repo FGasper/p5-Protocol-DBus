@@ -108,15 +108,19 @@ sub _test_anyevent {
 
         require Protocol::DBus::Client::AnyEvent;
 
-        my $err = eval {
+        my $ok = eval {
             my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
 
             my $cv = AnyEvent->condvar();
             $dbus->initialize()->finally($cv);
             $cv->recv();
+
+            1;
         };
 
-        ok( !$err, 'AnyEvent can initialize()' ) or diag explain $err;
+        my $err = $@;
+
+        ok( $ok, 'AnyEvent can initialize()' ) or diag explain $err;
     }
 }
 
@@ -128,15 +132,19 @@ sub _test_ioasync {
 
         require Protocol::DBus::Client::IOAsync;
 
-        my $err = eval {
+        my $ok = eval {
             my $loop = IO::Async::Loop->new();
             my $dbus = Protocol::DBus::Client::IOAsync::login_session($loop);
 
             $dbus->initialize()->finally( sub { $loop->stop() } );
             $loop->run();
+
+            1;
         };
 
-        ok( !$err, 'IO::Async can initialize()' ) or diag explain $err;
+        my $err = $@;
+
+        ok( $ok, 'IO::Async can initialize()' ) or diag explain $err;
     }
 }
 
@@ -148,13 +156,17 @@ sub _test_mojo {
 
         require Protocol::DBus::Client::Mojo;
 
-        my $err = eval {
+        my $ok = eval {
             my $dbus = Protocol::DBus::Client::Mojo::login_session();
 
             $dbus->initialize()->wait();
+
+            1;
         };
 
-        ok( !$err, 'Mojo can initialize()' ) or diag explain $err;
+        my $err = $@;
+
+        ok( $ok, 'Mojo can initialize()' ) or diag explain $err;
     }
 }
 
