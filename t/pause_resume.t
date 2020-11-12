@@ -7,8 +7,17 @@ use Test::More;
 use Test::Deep;
 use Test::FailWarnings;
 
+use FindBin;
+use lib "$FindBin::Bin/lib";
+
+use DBusSession;
+
 SKIP: {
     skip 'No AnyEvent!', 1 if !eval { require AnyEvent::Loop };
+
+    DBusSession::get_bin_or_skip();
+
+    my $session = DBusSession->new();
 
     require Protocol::DBus::Client::AnyEvent;
 
