@@ -27,14 +27,14 @@ sub new {
 
     my $dir = File::Temp::tempdir();
 
-    my $pid = open my $rfh, '-|', "$dbus_run_session_bin -- $^X -MTime::HiRes -e'\$| = 1; print \$INC{DBUS_SESSION_BUS_ADDRESS} . \$/; Time::HiRes::sleep(0.1) while !-e qq<$dir/done>'";
+    my $pid = open my $rfh, '-|', "$dbus_run_session_bin -- $^X -MTime::HiRes -e'\$| = 1; print \$ENV{DBUS_SESSION_BUS_ADDRESS} . \$/; Time::HiRes::sleep(0.1) while !-e qq<$dir/done>'";
 
     diag "reading bus address from child …";
 
     my $address = readline($rfh);
+    chomp $address if $address;
 
     if ($address) {
-        chomp $address;
         diag "bus address: $address";
     }
     else {
