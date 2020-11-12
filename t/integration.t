@@ -91,13 +91,63 @@ SKIP: {
 #----------------------------------------------------------------------
 
 SKIP: {
-    skip 'No usable dbus-run-session', 3 if !$dbus_run_session_bin;
+    skip 'No usable dbus-run-session', 4 if !$dbus_run_session_bin;
 
     my $sess = DBusSession->new();
 
     _test_anyevent();
     _test_ioasync();
     _test_mojo();
+
+    _test_unix_fds();
+}
+
+sub _test_unix_fds {
+    SKIP: {
+        eval { require Socket::MsgHdr };
+
+        my $dbus1 = Protocol::DBus::Client::login_session();
+        $dbus1->initialize();
+
+        skip 'Unix FDs are unsupported.', 1 if !$dbus1->supports_unix_fd();
+
+        my $dbus2 = Protocol::DBus::Client::login_session();
+        $dbus2->initialize();
+
+        my ($pr, $pw);
+        pipe $pr, $pw;
+
+        my $interface = 'org.whatever' . sprintf('%x', substr(rand, 2));
+
+        $dbus1->send_signal(
+            interface => $interface,
+            member => 'passfd',
+            signature => 'h',
+            path => '/org/whatever',
+            destination => $dbus2->get_unique_bus_name(),
+            body => [ $pw ],
+        );
+
+        my $dup_fh;
+
+        while ( my $msg = $dbus2->get_message() ) {
+            next if !$msg->type_is('SIGNAL');
+
+            next if $msg->get_header('INTERFACE') ne $interface;
+
+            ($dup_fh) = @{ $msg->get_body() };
+
+            last;
+        }
+
+        syswrite $dup_fh, 'x';
+        close $dup_fh;
+        close $pw;
+
+        sysread $pr, my $buf, 1;
+
+        is( $buf, 'x', 'UNIX FD passing works' );
+    }
 }
 
 sub _test_anyevent {
