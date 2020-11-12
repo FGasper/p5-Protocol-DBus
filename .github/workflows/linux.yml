@@ -70,6 +70,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cpanm -n Socket::MsgHdr
           cpanm -n Devel::Cover::Report::Coveralls
           cover -test -report Coveralls
       - name: Run tests - verbose (with coverage)
