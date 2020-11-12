@@ -140,13 +140,13 @@ sub _test_unix_fds {
             last;
         }
 
-        syswrite $dup_fh, 'xx';
+        syswrite $dup_fh, 'x';
         close $dup_fh;
         close $pw;
 
-        sysread $pr, my $buf, 2;
+        sysread $pr, my $buf, 1;
 
-        is( $buf, 'xx', 'UNIX FD passing works' );
+        is( $buf, 'x', 'UNIX FD passing works' );
     }
 }
 
