@@ -144,7 +144,7 @@ sub _test_unix_fds {
         close $dup_fh;
         close $pw;
 
-        sysread $pr, my $buf, 1;
+        sysread $pr, my $buf, 2;
 
         is( $buf, 'xx', 'UNIX FD passing works' );
     }
