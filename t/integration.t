@@ -91,7 +91,24 @@ SKIP: {
 #----------------------------------------------------------------------
 
 SKIP: {
-    skip 'No usable dbus-run-session', 4 if !$dbus_run_session_bin;
+    my $tests = 4;
+
+    if (!$dbus_run_session_bin) {
+        diag 'No usable dbus-run-session; trying login session anyway …';
+
+        require Protocol::DBus::Client;
+        my $ok = eval {
+            Protocol::DBus::Client::login_session()->initialize();
+            1;
+        };
+
+        if ($ok) {
+            diag "Login session OK; proceeding with tests.";
+        }
+        else {
+            skip 'Can’t find a login session; skipping.', $tests;
+        }
+    }
 
     my $sess = DBusSession->new();
 
@@ -154,7 +171,7 @@ sub _test_anyevent {
     SKIP: {
         skip 'No usable AnyEvent', 1 if !eval { require AnyEvent };
 
-        diag "Testing AnyEvent …";
+        diag "Testing AnyEvent ($AnyEvent::VERSION) …";
 
         require Protocol::DBus::Client::AnyEvent;
 
@@ -178,7 +195,7 @@ sub _test_ioasync {
     SKIP: {
         skip 'No usable IO::Async', 1 if !eval { require IO::Async::Loop };
 
-        diag "Testing IO::Async …";
+        diag "Testing IO::Async ($IO::Async::Loop::VERSION) …";
 
         require Protocol::DBus::Client::IOAsync;
 
@@ -202,7 +219,9 @@ sub _test_mojo {
     SKIP: {
         skip 'No usable Mojo', 1 if !eval { require Mojo::IOLoop };
 
-        diag "Testing Mojo …";
+        require Mojolicious;
+
+        diag "Testing Mojo ($Mojolicious::VERSION) …";
 
         require Protocol::DBus::Client::Mojo;
 
