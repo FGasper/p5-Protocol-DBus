@@ -70,7 +70,6 @@ See L<the example|/EXAMPLE USING MANUALLY-WRITTEN EVENT LOOP> below.
 
 <a href='https://coveralls.io/github/FGasper/p5-Protocol-DBus?branch=master'><img src='https://coveralls.io/repos/github/FGasper/p5-Protocol-DBus/badge.svg?branch=master' alt='Coverage Status' /></a>
 
-
 =end html
 
 This is an original, pure-Perl implementation of client messaging logic for
