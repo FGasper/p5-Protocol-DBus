@@ -44,7 +44,7 @@ use Protocol::DBus::Client::EventMessenger ();
 
 =head2 $promise = I<OBJ>->initialize()
 
-Returns a promise (L<Promise::ES6> instance) that resolves to a
+Returns a promise that resolves to a
 L<Protocol::DBus::Client::EventMessenger> instance. That object, not
 this one, is what you’ll use to send and receive messages.
 

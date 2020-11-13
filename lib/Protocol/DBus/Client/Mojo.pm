@@ -87,7 +87,7 @@ sub initialize {
     return _to_mojo( shift()->SUPER::initialize(@_) );
 }
 
-*initialize_p = *initialize;
+*initialize_p = __PACKAGE__->can('initialize');
 
 sub _to_mojo {
     my ($p_es6) = @_;
@@ -113,8 +113,6 @@ sub _initialize {
 
     my $cb = sub {
         if ( $dbus->initialize() ) {
-            $reactor->remove($socket);
-
             $y->();
         }
 
@@ -145,7 +143,9 @@ sub _initialize {
 sub _flush_send_queue {
     my ($dbus, $reactor, $socket) = @_;
 
-    $dbus->flush_write_queue() && $reactor->watch($socket, 1, 0);
+    my $is_empty = $dbus->flush_write_queue();
+
+    $reactor->watch($socket, !$_[0]->{'_paused'}, !$is_empty);
 
     return;
 }
@@ -190,6 +190,8 @@ sub _set_watches_and_create_messenger {
 }
 
 sub _pause {
+    $_[0]->{'_paused'} = 1;
+
     Mojo::IOLoop->singleton->reactor()->watch(
         $_[0]{'socket'},
         0,
@@ -198,6 +200,8 @@ sub _pause {
 }
 
 sub _resume {
+    delete $_[0]->{'_paused'};
+
     Mojo::IOLoop->singleton->reactor()->watch(
         $_[0]{'socket'},
         1,
