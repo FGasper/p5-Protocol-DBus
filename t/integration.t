@@ -112,9 +112,9 @@ SKIP: {
 
     my $sess = DBusSession->new();
 
-    _test_mojo();
     _test_anyevent();
     _test_ioasync();
+    _test_mojo();
 
     _test_unix_fds();
 }
@@ -228,10 +228,7 @@ sub _test_mojo {
         my $ok = eval {
             my $dbus = Protocol::DBus::Client::Mojo::login_session();
 
-            $dbus->initialize()->then(
-                sub { diag explain ["good", @_] },
-                sub { diag explain ["bad", @_] },
-            )->wait();
+            $dbus->initialize()->wait();
 
             1;
         };
