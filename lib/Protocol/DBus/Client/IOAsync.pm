@@ -156,7 +156,7 @@ sub _set_watches_and_create_messenger {
 
     my $loop = $self->{'loop'};
 
-    $self->{'_stop_reading_cr'} = sub {
+    $self->{'_give_up_cr'} = sub {
         $loop->remove($$watch_sr);
         $$watch_sr = undef;
     };

@@ -174,7 +174,7 @@ sub _set_watches_and_create_messenger {
 
         my $read_watch_sr = \$self->{'_read_watch'};
 
-        $self->{'_stop_reading_cr'} = sub {
+        $self->{'_give_up_cr'} = sub {
             $$read_watch_sr = undef;
         };
     }

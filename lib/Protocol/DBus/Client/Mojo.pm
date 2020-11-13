@@ -92,7 +92,7 @@ sub initialize {
 sub _to_mojo {
     my ($p_es6) = @_;
 
-    return Mojo::Promise->new( sub { $p_es6->then(@_) } )->then( sub {
+    return _PROMISE_CLASS()->new( sub { $p_es6->then(@_) } )->then( sub {
         return bless $_[0], 'Protocol::DBus::Client::Mojo::Messenger';
     } );
 }
@@ -125,6 +125,7 @@ sub _initialize {
             };
         }
         else {
+            $is_write_listening = 0;
             $reactor->watch($socket, 1, 0);
         }
     };
@@ -141,11 +142,11 @@ sub _initialize {
 }
 
 sub _flush_send_queue {
-    my ($dbus, $reactor, $socket) = @_;
+    my ($dbus, $reactor, $socket, $read_yn) = @_;
 
     my $is_empty = $dbus->flush_write_queue();
 
-    $reactor->watch($socket, !$_[0]->{'_paused'}, !$is_empty);
+    $reactor->watch($socket, $read_yn, !$is_empty);
 
     return;
 }
@@ -162,13 +163,15 @@ sub _set_watches_and_create_messenger {
     my $reactor = Mojo::IOLoop->singleton->reactor();
     my $socket = $self->{'socket'};
 
+    my $paused_r = $self->{'_paused'};
+
     $reactor->io(
         $self->{'socket'},
         sub {
             (undef, my $writable) = @_;
 
             if ($writable) {
-                _flush_send_queue($dbus, $reactor, $socket);
+                _flush_send_queue($dbus, $reactor, $socket, !$$paused_r);
             }
             else {
                 $read_cb->();
@@ -178,20 +181,18 @@ sub _set_watches_and_create_messenger {
 
     $self->_resume();
 
-    $self->{'_stop_reading_cr'} = sub {
+    $self->{'_give_up_cr'} = sub {
         Mojo::IOLoop->singleton->reactor()->remove($socket);
     };
 
     return sub {
         if ($dbus->pending_send()) {
-            _flush_send_queue( $dbus, $reactor, $socket );
+            _flush_send_queue( $dbus, $reactor, $socket, !$$paused_r );
         }
     };
 }
 
 sub _pause {
-    $_[0]->{'_paused'} = 1;
-
     Mojo::IOLoop->singleton->reactor()->watch(
         $_[0]{'socket'},
         0,
@@ -200,8 +201,6 @@ sub _pause {
 }
 
 sub _resume {
-    delete $_[0]->{'_paused'};
-
     Mojo::IOLoop->singleton->reactor()->watch(
         $_[0]{'socket'},
         1,
@@ -235,9 +234,9 @@ use parent 'Protocol::DBus::Client::EventMessenger';
 sub send_call {
     my $p = $_[0]->SUPER::send_call( @_[ 1 .. $#_ ] );
 
-    return Mojo::Promise->new( sub { $p->then(@_) } );
+    return Protocol::DBus::Client::Mojo::_PROMISE_CLASS()->new( sub { $p->then(@_) } );
 }
 
-*send_call_p = *send_call;
+*send_call_p = __PACKAGE__->can('send_call');
 
 1;
