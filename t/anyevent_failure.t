@@ -13,6 +13,8 @@ use DBusSession;
 SKIP: {
     skip 'No AnyEvent!', 1 if !eval { require AnyEvent };
 
+    DBusSession::skip_if_lack_needed_socket_msghdr(1);
+
     DBusSession::get_bin_or_skip();
 
     my $session = DBusSession->new();

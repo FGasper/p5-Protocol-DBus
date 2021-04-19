@@ -8,6 +8,25 @@ use File::Temp;
 
 use Test::More;
 
+use Protocol::DBus::Authn::Mechanism::EXTERNAL;
+
+sub skip_if_lack_needed_socket_msghdr {
+    my $count = shift;
+
+    return if grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
+
+    diag "$^O needs Socket::MsgHdr; loading …";
+
+    if ( eval { require Socket::MsgHdr } ) {
+        skip "Failed to load Socket::MsgHdr: $@", $count;
+    }
+    else {
+        diag "Loaded Socket::MsgHdr OK";
+    }
+
+    return;
+}
+
 sub get_bin {
     return File::Which::which('dbus-run-session');
 }

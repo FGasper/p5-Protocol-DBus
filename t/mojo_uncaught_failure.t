@@ -15,6 +15,10 @@ SKIP: {
     skip 'No Mojo::Promise!', 1 if !eval { require Mojo::Promise };
     skip 'Loop can’t timer()!', 1 if !Mojo::IOLoop->can('timer');
 
+    require Mojolicious;
+
+    skip "Mojo is $Mojolicious::VERSION; needs >= 8.15", 1 if !eval { Mojolicious->VERSION('8.15') };
+
     DBusSession::get_bin_or_skip();
 
     my $session = DBusSession->new();

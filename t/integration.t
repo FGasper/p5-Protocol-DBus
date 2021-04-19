@@ -221,6 +221,8 @@ sub _test_mojo {
 
         require Mojolicious;
 
+        skip "Mojo is $Mojolicious::VERSION; needs >= 8.15", 1 if !eval { Mojolicious->VERSION('8.15') };
+
         diag "Testing Mojo ($Mojolicious::VERSION) …";
 
         require Protocol::DBus::Client::Mojo;

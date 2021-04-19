@@ -11,6 +11,8 @@ Revision history for Perl module Protocol::DBus
 - Increase test coverage.
 - Work around an apparent Devel::Cover bug. (https://github.com/pjcj/Devel--Cover/issues/276)
 - Fix race conditions in unhandled-failure tests.
+- Make tests aware of OSes that need Socket::MsgHdr (and skip accordingly).
+- Skip tests on pre-8.15 Mojo. (Avoids bug w/ Promise->new())
 - Test suite now passes on Windows … for what that’s worth!
 - Fix typo in UNIX FDs example. (Thank you, Max Maischein!)
 - Trivial documentation tweaks.
