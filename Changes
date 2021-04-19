@@ -12,6 +12,7 @@ Revision history for Perl module Protocol::DBus
 - Work around an apparent Devel::Cover bug. (https://github.com/pjcj/Devel--Cover/issues/276)
 - Fix race conditions in unhandled-failure tests.
 - Test suite now passes on Windows … for what that’s worth!
+- Fix typo in UNIX FDs example. (Thank you, Max Maischein!)
 - Trivial documentation tweaks.
 
 0.16 Mon 22 June 2020
