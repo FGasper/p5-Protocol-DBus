@@ -93,6 +93,8 @@ SKIP: {
 SKIP: {
     my $tests = 4;
 
+    DBusSession::skip_if_lack_needed_socket_msghdr(4);
+
     if (!$dbus_run_session_bin) {
         diag 'No usable dbus-run-session; trying login session anyway …';
 
