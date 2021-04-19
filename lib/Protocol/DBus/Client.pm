@@ -216,7 +216,8 @@ sub init_pending_send {
 
 Boolean that indicates whether this client supports UNIX FD passing.
 
-This won't work unless you have loaded L<Socket::MsgHdr> in your code.
+(See the main L<Protocol::DBus> documentation for details about
+support for UNIX FD passing.)
 
 =cut
 
