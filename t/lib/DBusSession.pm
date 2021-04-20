@@ -13,9 +13,14 @@ use Protocol::DBus::Authn::Mechanism::EXTERNAL;
 sub skip_if_lack_needed_socket_msghdr {
     my $count = shift;
 
-    return if grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
+    my $needs_socket_msghdr = !grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;
 
-    diag "$^O needs Socket::MsgHdr; loading …";
+    if ($needs_socket_msghdr) {
+        diag "$^O needs Socket::MsgHdr; loading …";
+    }
+    else {
+        diag "$^O works without Socket::MsgHdr, so I won’t load that module.";
+    }
 
     if ( eval { require Socket::MsgHdr } ) {
         diag "Loaded Socket::MsgHdr OK";
