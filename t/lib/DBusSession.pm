@@ -20,6 +20,7 @@ sub skip_if_lack_needed_socket_msghdr {
     }
     else {
         diag "$^O works without Socket::MsgHdr, so I won’t load that module.";
+        return;
     }
 
     if ( eval { require Socket::MsgHdr } ) {
