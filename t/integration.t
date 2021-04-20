@@ -67,6 +67,8 @@ SKIP: {
 
     $dbus_run_session_bin = $bin;
 
+    diag "dbus-run-session OK: $bin";
+
     my $loaded_smh = readpipe( qq[$bin -- $^X @incargs -MProtocol::DBus::Client -e 'Protocol::DBus::Client::login_session()->initialize(); print \$INC{"Socket/MsgHdr.pm"} ? "y" : "n"'] );
 
     my $no_msghdr_needed = grep { $^O eq $_ } @Protocol::DBus::Authn::Mechanism::EXTERNAL::_OS_NO_MSGHDR_LIST;

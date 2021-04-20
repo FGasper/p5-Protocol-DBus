@@ -18,10 +18,10 @@ sub skip_if_lack_needed_socket_msghdr {
     diag "$^O needs Socket::MsgHdr; loading …";
 
     if ( eval { require Socket::MsgHdr } ) {
-        skip "Failed to load Socket::MsgHdr: $@", $count;
+        diag "Loaded Socket::MsgHdr OK";
     }
     else {
-        diag "Loaded Socket::MsgHdr OK";
+        skip "Failed to load Socket::MsgHdr: $@", $count;
     }
 
     return;
