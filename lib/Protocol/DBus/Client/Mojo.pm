@@ -113,18 +113,21 @@ sub _initialize {
 
     my $cb = sub {
         if ( $dbus->initialize() ) {
+print STDERR "==== D-Bus initialized\n";
             $y->();
         }
 
         # It seems unlikely that we’d need a write watch here.
         # But just in case …
         elsif ($dbus->init_pending_send()) {
+print STDERR "==== D-Bus pending send\n";
             $is_write_listening ||= do {
                 $reactor->watch($socket, 1, 1);
                 1;
             };
         }
         else {
+print STDERR "==== D-Bus NOT pending send\n";
             $is_write_listening = 0;
             $reactor->watch($socket, 1, 0);
         }

@@ -9,6 +9,7 @@ Revision history for Perl module Protocol::DBus
 - BUG FIX: Fix memory leaks (and detection thereof) in event loop interfaces.
 - Make event loops defer polling until at least one initialize() has run.
 - Increase test coverage.
+- Require a new enough Socket.pm to fix RT86613.
 - Work around an apparent Devel::Cover bug. (https://github.com/pjcj/Devel--Cover/issues/276)
 - Fix race conditions in unhandled-failure tests.
 - Make tests aware of OSes that need Socket::MsgHdr (and skip accordingly).

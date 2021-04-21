@@ -11,7 +11,7 @@ use Protocol::DBus::X ();
 
 use constant _CRLF => "\x0d\x0a";
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 sub new {
     my ($class, %opts) = @_;
