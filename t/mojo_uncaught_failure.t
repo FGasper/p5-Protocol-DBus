@@ -19,6 +19,8 @@ SKIP: {
 
     skip "Mojo is $Mojolicious::VERSION; needs >= 8.15", 1 if !eval { Mojolicious->VERSION('8.15') };
 
+    DBusSession::skip_if_lack_needed_socket_msghdr(1);
+
     DBusSession::get_bin_or_skip();
 
     my $session = DBusSession->new();

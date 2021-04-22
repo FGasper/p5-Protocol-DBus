@@ -18,6 +18,8 @@ SKIP: {
     my $loop = IO::Async::Loop->new();
     skip 'Loop can’t watch_time()!', 1 if !$loop->can('watch_time');
 
+    DBusSession::skip_if_lack_needed_socket_msghdr(1);
+
     DBusSession::get_bin_or_skip();
 
     my $session = DBusSession->new();
