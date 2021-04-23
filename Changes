@@ -10,7 +10,10 @@ Revision history for Perl module Protocol::DBus
 - Make event loops defer polling until at least one initialize() has run.
 - Increase test coverage.
 - Require a new enough Socket.pm to fix RT86613.
-- Work around an apparent Devel::Cover bug. (https://github.com/pjcj/Devel--Cover/issues/276)
+- Work around an apparent Devel::Cover bug.
+  (https://github.com/pjcj/Devel--Cover/issues/276)
+- Work around Socket.pm’s misbehavior on Cygwin.
+  (https://rt.cpan.org/Public/Bug/Display.html?id=135262)
 - Fix race conditions in unhandled-failure tests.
 - Make tests aware of OSes that need Socket::MsgHdr (and skip accordingly).
 - Skip tests on pre-8.15 Mojo. (Avoids bug w/ Promise->new())

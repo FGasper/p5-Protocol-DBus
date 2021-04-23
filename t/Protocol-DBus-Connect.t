@@ -48,6 +48,10 @@ SKIP: {
 
     skip "Your OS ($^O) doesn’t report getpeername() … ?", 1 if !$peername;
 
+    # Accommodate https://rt.cpan.org/Public/Bug/Display.html?id=135262
+    my $need_len = length Socket::pack_sockaddr_un('hi');
+    $peername = pack "a$need_len", $peername;
+
     my $peerpath = Socket::unpack_sockaddr_un($peername);
 
     $peerpath =~ tr<\0><>d;
