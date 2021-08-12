@@ -1,6 +1,6 @@
 Revision history for Perl module Protocol::DBus
 
-0.18
+0.18 Wed 11 Aug 2021
 - (No production changes.)
 - Fix Mojo test to ignore external warnings.
 - Fix Socket::MsgHdr-dependent tests to check the version.
