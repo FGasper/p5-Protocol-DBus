@@ -180,45 +180,48 @@ sub _test_anyevent {
 
         require Protocol::DBus::Client::AnyEvent;
 
-    my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
+        my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
 
-    my @warnings;
-    local $SIG{'__WARN__'} = sub { push @warnings, @_ };
+        my @warnings;
+        local $SIG{'__WARN__'} = sub { push @warnings, @_ };
 
-    my $cv = AnyEvent->condvar();
-    $dbus->initialize()->then( sub {
-	my $msgr = shift;
+        my $err;
 
-	pass('AnyEvent can initialize()');
+        my $cv = AnyEvent->condvar();
+        $dbus->initialize()->then( sub {
+            my $msgr = shift;
 
-	my $p = $msgr->send_call(
-	    member => 'CreateTransaction',
-	    path => '/org/freedesktop/PackageKit',
-	    destination => 'org.freedesktop.PackageKit',
-	    interface => 'org.freedesktop.PackageKit',
-	)->then(
-	    sub { fail 'Errant success?!?' },
-	    sub { isa_ok( $_[0], 'Protocol::DBus::X::SurpriseShutdown', "error from bogus stuff we sent") },
-	);
+            pass('AnyEvent can initialize()');
 
-	# To test “armageddon” we have to corrupt the D-Bus
-	# session somehow. So reach in, grab the socket, and
-	# write some nonsense to it:
-	my $client_dbus_obj = $msgr->_dbus();
-	my $socket = $client_dbus_obj->{'_socket'};
-	syswrite $socket, rand;
+            my $p = $msgr->send_call(
+                member => 'CreateTransaction',
+                path => '/org/freedesktop/PackageKit',
+                destination => 'org.freedesktop.PackageKit',
+                interface => 'org.freedesktop.PackageKit',
+            )->then(
+                sub { fail 'Errant success?!?' },
+                sub { $err = shift; },
+            );
 
-	return $p;
-    } )->finally($cv);
+            # To test “armageddon” we have to corrupt the D-Bus
+            # session somehow. So reach in, grab the socket, and
+            # write some nonsense to it:
+            my $client_dbus_obj = $msgr->_dbus();
+            my $socket = $client_dbus_obj->{'_socket'};
+            syswrite $socket, rand;
 
-    $cv->recv();
+            return $p;
+        } )->finally($cv);
 
-    cmp_deeply(
-	\@warnings,
-        [ re( qr<.> ) ],
-        'got warning',
-    );
+        $cv->recv();
 
+        cmp_deeply(
+            \@warnings,
+            [ re( qr<.> ) ],
+            'got warning',
+        );
+
+        isa_ok( $err, 'Protocol::DBus::X::SurpriseShutdown', "error from bogus stuff we sent") or diag explain $err;
     }
 }
 
