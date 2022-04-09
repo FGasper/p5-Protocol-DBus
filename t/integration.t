@@ -6,6 +6,7 @@ use autodie;
 
 use Test::More;
 use Test::FailWarnings -allow_deps => 1;
+use Test::Deep;
 
 use Protocol::DBus::Authn::Mechanism::EXTERNAL ();
 
@@ -179,19 +180,45 @@ sub _test_anyevent {
 
         require Protocol::DBus::Client::AnyEvent;
 
-        my $ok = eval {
-            my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
+    my $dbus = Protocol::DBus::Client::AnyEvent::login_session();
 
-            my $cv = AnyEvent->condvar();
-            $dbus->initialize()->finally($cv);
-            $cv->recv();
+    my @warnings;
+    local $SIG{'__WARN__'} = sub { push @warnings, @_ };
 
-            1;
-        };
+    my $cv = AnyEvent->condvar();
+    $dbus->initialize()->then( sub {
+	my $msgr = shift;
 
-        my $err = $@;
+	pass('AnyEvent can initialize()');
 
-        ok( $ok, 'AnyEvent can initialize()' ) or diag explain $err;
+	my $p = $msgr->send_call(
+	    member => 'CreateTransaction',
+	    path => '/org/freedesktop/PackageKit',
+	    destination => 'org.freedesktop.PackageKit',
+	    interface => 'org.freedesktop.PackageKit',
+	)->then(
+	    sub { fail 'Errant success?!?' },
+	    sub { isa_ok( $_[0], 'Protocol::DBus::X::SurpriseShutdown', "error from bogus stuff we sent") },
+	);
+
+	# To test “armageddon” we have to corrupt the D-Bus
+	# session somehow. So reach in, grab the socket, and
+	# write some nonsense to it:
+	my $client_dbus_obj = $msgr->_dbus();
+	my $socket = $client_dbus_obj->{'_socket'};
+	syswrite $socket, rand;
+
+	return $p;
+    } )->finally($cv);
+
+    $cv->recv();
+
+    cmp_deeply(
+	\@warnings,
+        [ re( qr<.> ) ],
+        'got warning',
+    );
+
     }
 }
 
