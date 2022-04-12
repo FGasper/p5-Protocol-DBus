@@ -194,10 +194,10 @@ sub _test_anyevent {
             pass('AnyEvent can initialize()');
 
             my $p = $msgr->send_call(
-                member => 'CreateTransaction',
-                path => '/org/freedesktop/PackageKit',
-                destination => 'org.freedesktop.PackageKit',
-                interface => 'org.freedesktop.PackageKit',
+                member => 'message',
+                path => '/test/pdb',
+                interface => 'test.pdb',
+                destination => $msgr->get_unique_bus_name(),
             )->then(
                 sub { fail 'Errant success?!?' },
                 sub { $err = shift; },
