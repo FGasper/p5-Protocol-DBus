@@ -8,17 +8,17 @@ on:
       - '*'
   pull_request:
 
+env:
+    PERL_USE_UNSAFE_INC: 0
+    AUTHOR_TESTING: 1
+    AUTOMATED_TESTING: 1
+    RELEASE_TESTING: 0
+    PERL_CARTON_PATH: $GITHUB_WORKSPACE/local
+
 jobs:
   perl:
 
     runs-on: ubuntu-latest
-
-    env:
-       PERL_USE_UNSAFE_INC: 0
-       AUTHOR_TESTING: 1
-       AUTOMATED_TESTING: 1
-       RELEASE_TESTING: 0
-       PERL_CARTON_PATH: $GITHUB_WORKSPACE/local
 
     strategy:
       fail-fast: false
@@ -77,3 +77,21 @@ jobs:
       - name: Run tests - verbose (with coverage)
         if: ${{ matrix.coverage }}
         run: "prove -vl t"
+
+  qemu-alpine:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - i386
+          - arm32v6
+          - arm32v7
+          - s390x
+
+    steps:
+      - name: Get the qemu container
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Run tests on ${{ matrix.platform }}
+        run: docker run --rm --interactive ${{ matrix.platform }}/alpine sh -c "apk add curl wget cmake perl perl-dev make git gcc g++ libc-dev; echo Cloning $GITHUB_SERVER_URL/$GITHUB_REPOSITORY; git clone --recurse-submodules $GITHUB_SERVER_URL/$GITHUB_REPOSITORY; cd $( echo $GITHUB_REPOSITORY | cut -d/ -f2 ); echo Checking out $GITHUB_SHA; git checkout $GITHUB_SHA; perl -V; curl -L https://cpanmin.us | perl - --verbose --notest --installdeps --with-configure .; curl -L https://cpanmin.us | perl - --verbose --notest Socket::MsgHdr AnyEvent IO::Async Mojolicious; perl Makefile.PL; make; prove -wlvmb t"
