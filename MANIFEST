@@ -3,6 +3,7 @@ LICENSE
 MANIFEST
 Makefile.PL
 README.md
+cpanfile
 examples/anyevent.pl
 examples/anyevent_monitor.pl
 examples/credentials.pl

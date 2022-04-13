@@ -35,7 +35,7 @@ jobs:
       - name: Install Socket::MsgHdr (optional)
         run: "curl -L https://cpanmin.us | perl - --notest Socket::MsgHdr ||:"
       - name: Install Dependencies
-        run: curl -L https://cpanmin.us | perl - --notest --installdeps .
+        run: curl -L https://cpanmin.us | perl - --notest --installdeps --with-configure .
       - name: perl Makefile.PL
         run: perl Makefile.PL
       - name: make
