@@ -375,81 +375,8 @@ sub _unmarshal_struct {
     return ($items_ar, ($buf_offset - $buf_start) + $len);
 }
 
-sub _buffer_length_satisfies_signature {
-    my ($buf, $buf_offset, $sig) = @_;
-
-    my $sig_offset = 0;
-
-    while ($buf_offset <= length($buf)) {
-
-        # We’re good if this passes because it means the buffer is longer
-        # than the passed-in signature needs it to be.
-        return (1, $buf_offset) if $sig_offset == length($sig);
-
-        my $sct_length = Protocol::DBus::Signature::get_sct_length($sig, $sig_offset);
-
-        my $next_sct = substr(
-            $sig,
-            $sig_offset,
-            $sct_length,
-        );
-
-        $sig_offset += $sct_length;
-
-        if ($next_sct eq 'v') {
-            my ($variant_sig, $len) = _unmarshal_sct($buf, $buf_offset, 'g');
-            $buf_offset += $len;
-
-            # This has to recurse and preserve the offset.
-            my ($ok, $new_offset) = _buffer_length_satisfies_signature( $buf, $buf_offset, $variant_sig );
-            return 0 if !$ok;
-            $buf_offset = $new_offset;
-        }
-
-        # signatures
-        elsif ($next_sct eq 'g') {
-            # 2 for the length byte and the trailing NUL
-            $buf_offset += 2 + unpack( "\@$buf_offset C", $buf )
-        }
-
-        # strings and object paths
-        elsif ( Protocol::DBus::Pack::STRING()->{$next_sct} ) {
-            _add_uint32_variant_length(\$buf, \$buf_offset);
-            $buf_offset++;  #trailing NUL
-        }
-
-        # numerics
-        elsif ( my $width = Protocol::DBus::Pack::WIDTH()->{$next_sct} ) {
-            $buf_offset += $width;
-        }
-
-        else {
-            my $char0 = substr($next_sct, 0, 1);
-
-            if ($char0 eq 'a') {
-                _add_uint32_variant_length(\$buf, \$buf_offset);
-            }
-            elsif ($char0 eq '(') {
-                Protocol::DBus::Pack::align( $buf_offset, 8 );
-
-                my ($ok, $new_offset) = _buffer_length_satisfies_signature( $buf, $buf_offset, substr($next_sct, 1, -1) );
-                return 0 if !$ok;
-                $buf_offset = $new_offset;
-            }
-            else {
-                die "unrecognized SCT: “$next_sct”";
-            }
-        }
-    }
-
-    return 0;
-}
-
 sub _add_uint32_variant_length {
     my ($buf_sr, $buf_offset_sr) = @_;
-use Data::Dumper;
-$Data::Dumper::Useqq = 1;
-print STDERR Dumper @_;
 
     Protocol::DBus::Pack::align( $$buf_offset_sr, 4 );
 
