@@ -1,5 +1,8 @@
 Revision history for Perl module Protocol::DBus
 
+0.22
+- BUG FIX: Mojo adapter now properly pauses/unpauses.
+
 0.21 Wed 20 Apr 2022
 - Require up-to-date IO::Framed.
 

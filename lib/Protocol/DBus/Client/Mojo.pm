@@ -163,7 +163,7 @@ sub _set_watches_and_create_messenger {
     my $reactor = Mojo::IOLoop->singleton->reactor();
     my $socket = $self->{'socket'};
 
-    my $paused_r = $self->{'_paused'};
+    my $paused_r = \$self->{'_paused'};
 
     $reactor->io(
         $self->{'socket'},
