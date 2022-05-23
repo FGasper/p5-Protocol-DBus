@@ -57,6 +57,8 @@ jobs:
         run: "cpanm --notest IO::Async ||:"
       - name: Install Mojolicious (optional)
         run: "cpanm --notest Mojolicious ||:"
+      - name: Install Socket::MsgHdr (optional)
+        run: "cpanm --notest Socket::MsgHdr ||:"
       - name: Install Dependencies
         run: cpanm --notest --installdeps .
       - name: perl Makefile.PL
@@ -65,7 +67,7 @@ jobs:
         run: make
       - name: Run Tests (no coverage)
         if: ${{ !matrix.coverage }}
-        run: make test
+        run: prove -wlvmb t
       - name: Run tests (with coverage)
         if: ${{ matrix.coverage }}
         env:

@@ -8,6 +8,8 @@ requires 'IO::Framed' => 0.16;
 requires 'IO::SigGuard';
 requires 'Promise::ES6';
 
+recommends 'Socket::MsgHdr';
+
 # Perl 5.10.1 ships 1.82, which mishandles
 # abstract-namespace Linux sockets.
 # … and pre-2.011 mishandled UNIX socket length
