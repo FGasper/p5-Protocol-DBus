@@ -173,26 +173,52 @@ my @marshal_le_tests = (
     },
 );
 
-for my $t (@marshal_le_tests) {
-    my ($out_sr, $out_fds) = Protocol::DBus::Marshal::marshal_le( @{ $t->{'in'} } );
+my @marshal_be_tests = (
+    {
+        in => [ 'y', [ 0 ] ],
+        out => chr 0,
+    },
+    {
+        in => [ 'y', [ 123 ] ],
+        out => chr 123,
+    },
+    {
+        in => [ 'b', [ 0 ] ],
+        out => "\0\0\0\0",
+    },
+    {
+        in => [ 'b', [ 1 ] ],
+        out => "\0\0\0\1",
+    },
+);
 
-    is(
-        $$out_sr,
-        $t->{'out'},
-        'marshal_le(): ' . _terse_dump($t->{'in'}),
-    ) or diag _terse_dump( [ got => $out_sr, wanted => $t->{'out'} ] );
+my @marshal_groups = (
+    [ marshal_le => \@marshal_le_tests ],
+    [ marshal_be => \@marshal_be_tests ],
+);
 
-    if ($t->{'out_fds'}) {
-        is_deeply(
-            $out_fds,
-            $t->{'out_fds'},
-            '... and associated file handles',
-        );
+for my $g_ar (@marshal_groups) {
+    my ($fn, $tt_ar) = @$g_ar;
+
+    for my $t (@$tt_ar) {
+        my ($out_sr, $out_fds) = Protocol::DBus::Marshal->can($fn)->( @{ $t->{'in'} } );
+
+        is(
+            $$out_sr,
+            $t->{'out'},
+            "$fn(): " . _terse_dump($t->{'in'}),
+        ) or diag _terse_dump( [ got => $out_sr, wanted => $t->{'out'} ] );
+
+        if ($t->{'out_fds'}) {
+            is_deeply(
+                $out_fds,
+                $t->{'out_fds'},
+                '... and associated file handles',
+            );
+        }
     }
 }
 
-#done_testing();
-#exit;
 #----------------------------------------------------------------------
 
 my @positive_le_tests = (
@@ -394,6 +420,8 @@ for my $t (@positive_le_tests) {
         "unmarshal_le: $str",
     ) or diag explain [$data, $offset_delta];
 }
+
+#----------------------------------------------------------------------
 
 sub _str_for_buf_offset_sig {
     my ($buf, $buf_offset, $sig) = @_;
