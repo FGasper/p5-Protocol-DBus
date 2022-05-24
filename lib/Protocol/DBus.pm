@@ -3,7 +3,7 @@ package Protocol::DBus;
 use strict;
 use warnings;
 
-our $VERSION = '0.21_01';
+our $VERSION = '0.22';
 
 =encoding utf8
 
@@ -145,16 +145,6 @@ via a UNIX socket. (Linux, notably, does not.) It depends if your OS can
 send local socket credentials without using L<sendmsg(2)>.
 
 =item * EXTERNAL and DBUS_COOKIE_SHA1 authentications are supported.
-
-=back
-
-=head1 TODO
-
-=over
-
-=item * Improve parsing of bus paths in environment variables.
-
-=item * Add more tests.
 
 =back
 

@@ -11,13 +11,7 @@ use lib "$FindBin::Bin/lib";
 use DBusSession;
 
 SKIP: {
-    skip 'No Mojo::IOLoop!', 1 if !eval { require Mojo::IOLoop };
-    skip 'No Mojo::Promise!', 1 if !eval { require Mojo::Promise };
-    skip 'Loop can’t timer()!', 1 if !Mojo::IOLoop->can('timer');
-
-    require Mojolicious;
-
-    skip "Mojo is $Mojolicious::VERSION; needs >= 8.15", 1 if !eval { Mojolicious->VERSION('8.15') };
+    DBusSession::skip_if_missing_or_outdated_mojo(1);
 
     DBusSession::skip_if_lack_needed_socket_msghdr(1);
 

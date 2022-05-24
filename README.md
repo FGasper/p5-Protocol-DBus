@@ -117,11 +117,6 @@ via a UNIX socket. (Linux, notably, does not.) It depends if your OS can
 send local socket credentials without using [sendmsg(2)](http://man.he.net/man2/sendmsg).
 - EXTERNAL and DBUS\_COOKIE\_SHA1 authentications are supported.
 
-# TODO
-
-- Improve parsing of bus paths in environment variables.
-- Add more tests.
-
 # EXAMPLE USING MANUALLY-WRITTEN EVENT LOOP
 
     my $dbus = Protcol::DBus::Client::system();
