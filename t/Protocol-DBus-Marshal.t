@@ -221,7 +221,7 @@ for my $g_ar (@marshal_groups) {
 
 #----------------------------------------------------------------------
 
-my @positive_le_tests = (
+my @unmarshal_le_tests = (
     {
         in => ["\x0a\0\0\0", 0, 'u'],
         out => [ [10], 4 ],
@@ -405,20 +405,36 @@ my @positive_le_tests = (
     },
 );
 
-for my $t (@positive_le_tests) {
-    my ($buf, $buf_offset, $sig) = @{ $t->{'in'} };
+my @unmarshal_be_tests = (
+    {
+        in => ["\0\0\0\x0a", 0, 'u'],
+        out => [ [10], 4 ],
+    },
+);
 
-    my $str = _str_for_buf_offset_sig( $buf, $buf_offset, $sig);
+my @unmarshal_groups = (
+    [ unmarshal_le => \@unmarshal_le_tests ],
+    [ unmarshal_be => \@unmarshal_be_tests ],
+);
 
-    #$str .= "] → [" . join(', ', map { Dumper($_) } @{ $t->{'out'} } ) . ']';
+for my $g_ar (@unmarshal_groups) {
+    my ($fn, $tt_ar) = @$g_ar;
 
-    my ($data, $offset_delta) = Protocol::DBus::Marshal::unmarshal_le(\$buf, $buf_offset, $sig);
+    for my $t (@$tt_ar) {
+        my ($buf, $buf_offset, $sig) = @{ $t->{'in'} };
 
-    cmp_deeply(
-        [$data, $offset_delta],
-        $t->{'out'},
-        "unmarshal_le: $str",
-    ) or diag explain [$data, $offset_delta];
+        my $str = _str_for_buf_offset_sig( $buf, $buf_offset, $sig);
+
+        #$str .= "] → [" . join(', ', map { Dumper($_) } @{ $t->{'out'} } ) . ']';
+
+        my ($data, $offset_delta) = Protocol::DBus::Marshal->can($fn)->(\$buf, $buf_offset, $sig);
+
+        cmp_deeply(
+            [$data, $offset_delta],
+            $t->{'out'},
+            "$fn: $str",
+        ) or diag explain [$data, $offset_delta];
+    }
 }
 
 #----------------------------------------------------------------------
