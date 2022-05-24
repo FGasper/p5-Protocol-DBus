@@ -45,7 +45,7 @@ sub skip_if_lack_needed_socket_msghdr {
 sub skip_if_missing_or_outdated_mojo {
     my $count = shift;
 
-    skip 'No Mojo::IOLoop!', 1 if !eval { require Mojo::IOLoop };
+    skip 'No Mojo::IOLoop!', $count if !eval { require Mojo::IOLoop };
     skip 'No Mojo::Promise!', $count if !eval { require Mojo::Promise };
     skip 'Loop can’t timer()!', $count if !Mojo::IOLoop->can('timer');
 
