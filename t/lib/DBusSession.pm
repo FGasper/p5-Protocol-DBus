@@ -3,6 +3,7 @@ package DBusSession;
 use strict;
 use warnings;
 
+use Carp;
 use File::Which;
 use File::Temp;
 
@@ -72,7 +73,7 @@ sub get_bin_or_skip {
 sub new {
     my $class = shift;
 
-    my $dbus_run_session_bin = get_bin() or die "no dbus-run-session!";
+    my $dbus_run_session_bin = get_bin() or confess "no dbus-run-session!";
 
     my $dir = File::Temp::tempdir();
 

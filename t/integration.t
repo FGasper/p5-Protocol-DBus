@@ -96,23 +96,10 @@ SKIP: {
 SKIP: {
     my $tests = 4;
 
-    DBusSession::skip_if_lack_needed_socket_msghdr(4);
+    DBusSession::skip_if_lack_needed_socket_msghdr($tests);
 
     if (!$dbus_run_session_bin) {
-        diag 'No usable dbus-run-session; trying login session anyway …';
-
-        require Protocol::DBus::Client;
-        my $ok = eval {
-            Protocol::DBus::Client::login_session()->initialize();
-            1;
-        };
-
-        if ($ok) {
-            diag "Login session OK; proceeding with tests.";
-        }
-        else {
-            skip 'Can’t find a login session; skipping.', $tests;
-        }
+        skip 'No usable dbus-run-session; skipping.', $tests;
     }
 
     my $sess = DBusSession->new();

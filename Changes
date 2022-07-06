@@ -1,5 +1,9 @@
 Revision history for Perl module Protocol::DBus
 
+0.23
+- Make t/integration.t work when there is no dbus-run-session but there
+  *is* a login session message bus. (as in RedHat 9)
+
 0.22 Mon 23 May 2022
 - BUG FIX: Mojo adapter no longer croaks on pause/unpause.
 - Remove left-in debug code.
